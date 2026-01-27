@@ -489,6 +489,19 @@ export default function ProposalPage() {
         }).format(value || 0);
     }
 
+    // For small values like cost per conversation - show 2-4 decimal places
+    function formatCurrencyDecimal(value) {
+        const num = parseFloat(value) || 0;
+        // Determine decimal places based on value size
+        const decimals = num < 1 ? 4 : num < 10 ? 2 : 0;
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+        }).format(num);
+    }
+
     function formatPercent(value) {
         return `${Math.round(value || 0)}%`;
     }
@@ -947,24 +960,22 @@ export default function ProposalPage() {
                 </div>
 
                 {/* Operational Costs - OpenAI Tokens */}
-                {(proposal.cost_per_conversation || proposal.estimated_monthly_cost) && (
+                {proposal.cost_per_conversation && (
                     <div className={styles.operationalCosts}>
                         <h4 className={styles.operationalCostsTitle}>Custos Operacionais (por conta do cliente)</h4>
                         <div className={styles.operationalCostsGrid}>
-                            {proposal.cost_per_conversation && (
-                                <div className={styles.costItem}>
-                                    <span className={styles.costValue}>{formatCurrency(proposal.cost_per_conversation)}</span>
-                                    <span className={styles.costLabel}>Custo médio por conversa</span>
-                                    <span className={styles.costDetail}>Tokens OpenAI</span>
-                                </div>
-                            )}
-                            {proposal.estimated_monthly_cost && (
-                                <div className={styles.costItem}>
-                                    <span className={styles.costValue}>{formatCurrency(proposal.estimated_monthly_cost)}</span>
-                                    <span className={styles.costLabel}>Estimativa mensal</span>
-                                    <span className={styles.costDetail}>Baseado em {proposal.leads_received} leads/mês</span>
-                                </div>
-                            )}
+                            <div className={styles.costItem}>
+                                <span className={styles.costValue}>{formatCurrencyDecimal(proposal.cost_per_conversation)}</span>
+                                <span className={styles.costLabel}>Custo médio por conversa</span>
+                                <span className={styles.costDetail}>Tokens OpenAI</span>
+                            </div>
+                            <div className={styles.costItem}>
+                                <span className={styles.costValue}>
+                                    {formatCurrency(proposal.estimated_monthly_cost || (proposal.cost_per_conversation * proposal.leads_received))}
+                                </span>
+                                <span className={styles.costLabel}>Estimativa mensal</span>
+                                <span className={styles.costDetail}>Baseado em {proposal.leads_received} leads/mês</span>
+                            </div>
                         </div>
                     </div>
                 )}
