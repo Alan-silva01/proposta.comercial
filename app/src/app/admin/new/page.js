@@ -65,6 +65,10 @@ export default function NewProposalPage() {
         has_maintenance: false,
         maintenance_price: '',
         maintenance_description: 'Suporte técnico, ajustes de fluxo, pequenas melhorias e atualizações mensais',
+
+        // Custos Operacionais (OpenAI)
+        cost_per_conversation: '',
+        estimated_monthly_cost: '',
         maintenance_payment_method: 'pix_cartao',
 
         // Cronograma de Entrega
@@ -222,6 +226,8 @@ export default function NewProposalPage() {
             comparison_with_ai: formData.comparison_with_ai.filter(item => item.trim() !== ''),
             comparison_without_ai: formData.comparison_without_ai.filter(item => item.trim() !== ''),
             market_stats: formData.market_stats.filter(stat => stat.text.trim() !== '' || stat.highlight.trim() !== ''),
+            cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
+            estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
             status: 'draft',
         };
 
@@ -658,6 +664,44 @@ export default function NewProposalPage() {
                                     </div>
                                 </>
                             )}
+                        </div>
+
+                        {/* Custos Operacionais - OpenAI */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>⚡ Custos Operacionais (OpenAI)</h3>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+                                Custos de tokens pagos pelo cliente
+                            </p>
+
+                            <div className={styles.gridTwo}>
+                                <div className="form-group">
+                                    <label className="label">Custo Médio por Conversa (R$)</label>
+                                    <input
+                                        type="number"
+                                        name="cost_per_conversation"
+                                        value={formData.cost_per_conversation}
+                                        onChange={handleChange}
+                                        className="input"
+                                        placeholder="Ex: 0.15"
+                                        step="0.0001"
+                                    />
+                                    <small className={styles.hint}>Valor estimado de tokens por conversa</small>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="label">Custo Mensal Estimado (R$)</label>
+                                    <input
+                                        type="number"
+                                        name="estimated_monthly_cost"
+                                        value={formData.estimated_monthly_cost}
+                                        onChange={handleChange}
+                                        className="input"
+                                        placeholder="Ex: 50.00"
+                                        step="0.01"
+                                    />
+                                    <small className={styles.hint}>Baseado na quantidade de leads</small>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Cronograma de Entrega */}

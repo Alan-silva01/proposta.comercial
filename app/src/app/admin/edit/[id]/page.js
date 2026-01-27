@@ -61,6 +61,8 @@ export default function EditProposalPage() {
         primary_color: '#BFFF00',
         benefits: [],
         status: 'draft',
+        cost_per_conversation: '',
+        estimated_monthly_cost: '',
     });
 
     useEffect(() => {
@@ -106,6 +108,8 @@ export default function EditProposalPage() {
             primary_color: data.primary_color || '#BFFF00',
             benefits: data.benefits || [],
             status: data.status || 'draft',
+            cost_per_conversation: data.cost_per_conversation?.toString() || '',
+            estimated_monthly_cost: data.estimated_monthly_cost?.toString() || '',
         });
 
         setLoading(false);
@@ -155,6 +159,8 @@ export default function EditProposalPage() {
             primary_color: formData.primary_color,
             benefits: formData.benefits,
             status: formData.status,
+            cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
+            estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
             updated_at: new Date().toISOString(),
         };
 
@@ -410,6 +416,37 @@ export default function EditProposalPage() {
                                 </div>
                             </>
                         )}
+                    </div>
+
+                    {/* Custos Operacionais */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>⚡ Custos Operacionais (OpenAI)</h3>
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Custo por Conversa (R$)</label>
+                                <input
+                                    type="number"
+                                    name="cost_per_conversation"
+                                    value={formData.cost_per_conversation}
+                                    onChange={handleChange}
+                                    className="input"
+                                    step="0.0001"
+                                    placeholder="Ex: 0.15"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Custo Mensal Estimado (R$)</label>
+                                <input
+                                    type="number"
+                                    name="estimated_monthly_cost"
+                                    value={formData.estimated_monthly_cost}
+                                    onChange={handleChange}
+                                    className="input"
+                                    step="0.01"
+                                    placeholder="Ex: 50.00"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Visual */}

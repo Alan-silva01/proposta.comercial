@@ -946,11 +946,28 @@ export default function ProposalPage() {
                     )}
                 </div>
 
-                <div className={styles.pricingRoi}>
-                    <p>
-                        Estimativa de retorno do investimento (Payback) em aproximadamente <strong>{Math.ceil((proposal.price_total / (roi?.revenueIncrease || 1)) * 30)} dias</strong> após a operação.
-                    </p>
-                </div>
+                {/* Operational Costs - OpenAI Tokens */}
+                {(proposal.cost_per_conversation || proposal.estimated_monthly_cost) && (
+                    <div className={styles.operationalCosts}>
+                        <h4 className={styles.operationalCostsTitle}>Custos Operacionais (por conta do cliente)</h4>
+                        <div className={styles.operationalCostsGrid}>
+                            {proposal.cost_per_conversation && (
+                                <div className={styles.costItem}>
+                                    <span className={styles.costValue}>{formatCurrency(proposal.cost_per_conversation)}</span>
+                                    <span className={styles.costLabel}>Custo médio por conversa</span>
+                                    <span className={styles.costDetail}>Tokens OpenAI</span>
+                                </div>
+                            )}
+                            {proposal.estimated_monthly_cost && (
+                                <div className={styles.costItem}>
+                                    <span className={styles.costValue}>{formatCurrency(proposal.estimated_monthly_cost)}</span>
+                                    <span className={styles.costLabel}>Estimativa mensal</span>
+                                    <span className={styles.costDetail}>Baseado em {proposal.leads_received} leads/mês</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <div className={styles.ctaContainer}>
                     <a
