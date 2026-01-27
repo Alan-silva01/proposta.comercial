@@ -531,7 +531,7 @@ export default function ProposalPage() {
                 {/* Background Media Layer */}
                 {proposal.hero_media && (
                     <div className={styles.heroMediaBackground}>
-                        {proposal.hero_media.includes('.mp4') || proposal.hero_media.includes('.webm') ? (
+                        {proposal.hero_media.includes('.mp4') || proposal.hero_media.includes('.webm') || proposal.hero_media.includes('.mov') ? (
                             <video
                                 autoPlay
                                 muted
