@@ -1,0 +1,451 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import styles from '../../new/new.module.css';
+
+const BENEFITS_OPTIONS = [
+    { id: '24/7', label: 'Atendimento 24/7', icon: '🕐' },
+    { id: 'no_absences', label: 'Sem faltas ou atrasos', icon: '✅' },
+    { id: 'instant_response', label: 'Resposta instantânea', icon: '⚡' },
+    { id: 'lead_qualification', label: 'Qualificação automática', icon: '🎯' },
+    { id: 'scalability', label: 'Escalabilidade ilimitada', icon: '📈' },
+    { id: 'consistency', label: 'Padrão de atendimento', icon: '🎖️' },
+    { id: 'data_collection', label: 'Coleta de dados', icon: '📊' },
+    { id: 'integration', label: 'Integração com CRM', icon: '🔗' },
+];
+
+const INDUSTRIES = [
+    'Clínica/Saúde',
+    'E-commerce',
+    'Imobiliária',
+    'Advocacia',
+    'Consultoria',
+    'Educação',
+    'Serviços',
+    'Varejo',
+    'Outro',
+];
+
+export default function EditProposalPage() {
+    const router = useRouter();
+    const { id } = useParams();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    const [formData, setFormData] = useState({
+        client_name: '',
+        company_name: '',
+        industry: '',
+        funnel_type: 'simple',
+        leads_received: '',
+        leads_responded: '',
+        leads_scheduled: '',
+        leads_showed_up: '',
+        leads_converted: '',
+        average_ticket: '',
+        ltv: '',
+        projected_response_rate: '95',
+        projected_conversion_rate: '',
+        projected_show_rate: '80',
+        price_total: '',
+        price_upfront: '',
+        installments: '1',
+        implementation_payment_method: 'pix_cartao',
+        has_maintenance: false,
+        maintenance_price: '',
+        maintenance_description: '',
+        maintenance_payment_method: 'pix_cartao',
+        primary_color: '#BFFF00',
+        benefits: [],
+        status: 'draft',
+    });
+
+    useEffect(() => {
+        fetchProposal();
+    }, [id]);
+
+    async function fetchProposal() {
+        const { data, error } = await supabase
+            .from('proposals')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            alert('Proposta não encontrada');
+            router.push('/admin');
+            return;
+        }
+
+        setFormData({
+            client_name: data.client_name || '',
+            company_name: data.company_name || '',
+            industry: data.industry || '',
+            funnel_type: data.funnel_type || 'simple',
+            leads_received: data.leads_received?.toString() || '',
+            leads_responded: data.leads_responded?.toString() || '',
+            leads_scheduled: data.leads_scheduled?.toString() || '',
+            leads_showed_up: data.leads_showed_up?.toString() || '',
+            leads_converted: data.leads_converted?.toString() || '',
+            average_ticket: data.average_ticket?.toString() || '',
+            ltv: data.ltv?.toString() || '',
+            projected_response_rate: data.projected_response_rate?.toString() || '95',
+            projected_conversion_rate: data.projected_conversion_rate?.toString() || '',
+            projected_show_rate: data.projected_show_rate?.toString() || '80',
+            price_total: data.price_total?.toString() || '',
+            price_upfront: data.price_upfront?.toString() || '',
+            installments: data.installments?.toString() || '1',
+            implementation_payment_method: data.implementation_payment_method || 'pix_cartao',
+            has_maintenance: data.has_maintenance || false,
+            maintenance_price: data.maintenance_price?.toString() || '',
+            maintenance_description: data.maintenance_description || '',
+            maintenance_payment_method: data.maintenance_payment_method || 'pix_cartao',
+            primary_color: data.primary_color || '#BFFF00',
+            benefits: data.benefits || [],
+            status: data.status || 'draft',
+        });
+
+        setLoading(false);
+    }
+
+    function handleChange(e) {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
+    function toggleBenefit(benefitId) {
+        setFormData(prev => ({
+            ...prev,
+            benefits: prev.benefits.includes(benefitId)
+                ? prev.benefits.filter(b => b !== benefitId)
+                : [...prev.benefits, benefitId],
+        }));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setSaving(true);
+
+        const proposalData = {
+            client_name: formData.client_name,
+            company_name: formData.company_name,
+            industry: formData.industry,
+            funnel_type: formData.funnel_type,
+            leads_received: parseInt(formData.leads_received) || 0,
+            leads_responded: parseInt(formData.leads_responded) || 0,
+            leads_scheduled: formData.funnel_type === 'scheduling' ? parseInt(formData.leads_scheduled) || null : null,
+            leads_showed_up: formData.funnel_type === 'scheduling' ? parseInt(formData.leads_showed_up) || null : null,
+            leads_converted: parseInt(formData.leads_converted) || 0,
+            average_ticket: parseFloat(formData.average_ticket) || 0,
+            ltv: formData.ltv ? parseFloat(formData.ltv) : null,
+            projected_response_rate: parseFloat(formData.projected_response_rate) || 95,
+            projected_conversion_rate: parseFloat(formData.projected_conversion_rate) || null,
+            projected_show_rate: formData.funnel_type === 'scheduling' ? parseFloat(formData.projected_show_rate) || 80 : null,
+            price_total: parseFloat(formData.price_total) || 0,
+            price_upfront: formData.price_upfront ? parseFloat(formData.price_upfront) : null,
+            installments: parseInt(formData.installments) || 1,
+            implementation_payment_method: formData.implementation_payment_method,
+            has_maintenance: formData.has_maintenance,
+            maintenance_price: formData.has_maintenance ? parseFloat(formData.maintenance_price) || 0 : null,
+            maintenance_description: formData.has_maintenance ? formData.maintenance_description : null,
+            maintenance_payment_method: formData.has_maintenance ? formData.maintenance_payment_method : null,
+            primary_color: formData.primary_color,
+            benefits: formData.benefits,
+            status: formData.status,
+            updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+            .from('proposals')
+            .update(proposalData)
+            .eq('id', id);
+
+        if (error) {
+            alert('Erro ao salvar: ' + error.message);
+            setSaving(false);
+            return;
+        }
+
+        router.push('/admin');
+    }
+
+    if (loading) {
+        return (
+            <div className={styles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+                <p>Carregando proposta...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <Link href="/admin" className={styles.backLink}>
+                    ← Voltar
+                </Link>
+                <h1>Editar Proposta</h1>
+            </header>
+
+            <form onSubmit={handleSubmit} className={styles.form}>
+                {/* Cliente */}
+                <section className={styles.stepContent}>
+                    <h2>Dados do Cliente</h2>
+
+                    <div className="form-group">
+                        <label className="label">Nome do Contato</label>
+                        <input type="text" name="client_name" value={formData.client_name} onChange={handleChange} className="input" required />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="label">Nome da Empresa</label>
+                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} className="input" required />
+                    </div>
+
+                    <div className={styles.gridTwo}>
+                        <div className="form-group">
+                            <label className="label">Segmento</label>
+                            <select name="industry" value={formData.industry} onChange={handleChange} className="select">
+                                <option value="">Selecione...</option>
+                                {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="label">Status</label>
+                            <select name="status" value={formData.status} onChange={handleChange} className="select">
+                                <option value="draft">Rascunho</option>
+                                <option value="sent">Enviada</option>
+                                <option value="viewed">Visualizada</option>
+                                <option value="accepted">Aceita</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="label">Tipo de Funil</label>
+                        <div className={styles.radioGroup}>
+                            <label className={`${styles.radioCard} ${formData.funnel_type === 'simple' ? styles.selected : ''}`}>
+                                <input type="radio" name="funnel_type" value="simple" checked={formData.funnel_type === 'simple'} onChange={handleChange} />
+                                <span className={styles.radioIcon}>🎯</span>
+                                <span className={styles.radioTitle}>Vendas Diretas</span>
+                            </label>
+                            <label className={`${styles.radioCard} ${formData.funnel_type === 'scheduling' ? styles.selected : ''}`}>
+                                <input type="radio" name="funnel_type" value="scheduling" checked={formData.funnel_type === 'scheduling'} onChange={handleChange} />
+                                <span className={styles.radioIcon}>📅</span>
+                                <span className={styles.radioTitle}>Com Agendamento</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Dados Atuais */}
+                <section className={styles.stepContent} style={{ marginTop: 'var(--space-8)' }}>
+                    <h2>Situação Atual</h2>
+
+                    <div className={styles.gridTwo}>
+                        <div className="form-group">
+                            <label className="label">Leads Recebidos/Mês</label>
+                            <input type="number" name="leads_received" value={formData.leads_received} onChange={handleChange} className="input" />
+                        </div>
+                        <div className="form-group">
+                            <label className="label">Leads Respondidos</label>
+                            <input type="number" name="leads_responded" value={formData.leads_responded} onChange={handleChange} className="input" />
+                        </div>
+                    </div>
+
+                    {formData.funnel_type === 'scheduling' && (
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Agendamentos</label>
+                                <input type="number" name="leads_scheduled" value={formData.leads_scheduled} onChange={handleChange} className="input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Compareceram</label>
+                                <input type="number" name="leads_showed_up" value={formData.leads_showed_up} onChange={handleChange} className="input" />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className={styles.gridTwo}>
+                        <div className="form-group">
+                            <label className="label">Conversões/Vendas</label>
+                            <input type="number" name="leads_converted" value={formData.leads_converted} onChange={handleChange} className="input" />
+                        </div>
+                        <div className="form-group">
+                            <label className="label">Ticket Médio (R$)</label>
+                            <input type="number" name="average_ticket" value={formData.average_ticket} onChange={handleChange} className="input" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="label">LTV (R$)</label>
+                        <input type="number" name="ltv" value={formData.ltv} onChange={handleChange} className="input" step="0.01" />
+                    </div>
+                </section>
+
+                {/* Projeções */}
+                <section className={styles.stepContent} style={{ marginTop: 'var(--space-8)' }}>
+                    <h2>Projeções</h2>
+
+                    <div className={styles.gridTwo}>
+                        <div className="form-group">
+                            <label className="label">Taxa de Resposta (%)</label>
+                            <input type="number" name="projected_response_rate" value={formData.projected_response_rate} onChange={handleChange} className="input" min="0" max="100" />
+                        </div>
+                        <div className="form-group">
+                            <label className="label">Taxa de Conversão (%)</label>
+                            <input type="number" name="projected_conversion_rate" value={formData.projected_conversion_rate} onChange={handleChange} className="input" min="0" max="100" />
+                        </div>
+                    </div>
+
+                    {formData.funnel_type === 'scheduling' && (
+                        <div className="form-group">
+                            <label className="label">Taxa de Comparecimento (%)</label>
+                            <input type="number" name="projected_show_rate" value={formData.projected_show_rate} onChange={handleChange} className="input" min="0" max="100" />
+                        </div>
+                    )}
+                </section>
+
+                {/* Investimento */}
+                <section className={styles.stepContent} style={{ marginTop: 'var(--space-8)' }}>
+                    <h2>Investimento</h2>
+
+                    {/* Implementação */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>💼 Implementação</h3>
+
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Valor Total (R$)</label>
+                                <input type="number" name="price_total" value={formData.price_total} onChange={handleChange} className="input" step="0.01" />
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Entrada (R$)</label>
+                                <input type="number" name="price_upfront" value={formData.price_upfront} onChange={handleChange} className="input" step="0.01" />
+                            </div>
+                        </div>
+
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Parcelas</label>
+                                <select name="installments" value={formData.installments} onChange={handleChange} className="select">
+                                    <option value="1">À vista</option>
+                                    <option value="2">2x</option>
+                                    <option value="3">3x</option>
+                                    <option value="4">4x</option>
+                                    <option value="5">5x</option>
+                                    <option value="6">6x</option>
+                                    <option value="10">10x</option>
+                                    <option value="12">12x</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Formas de Pagamento</label>
+                                <select name="implementation_payment_method" value={formData.implementation_payment_method} onChange={handleChange} className="select">
+                                    <option value="pix_cartao">PIX ou Cartão</option>
+                                    <option value="pix">Apenas PIX</option>
+                                    <option value="cartao">Apenas Cartão</option>
+                                    <option value="boleto">Boleto</option>
+                                    <option value="todos">Todos os meios</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Manutenção */}
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <h3 className={styles.sectionTitle}>🔧 Manutenção Mensal</h3>
+                            <label className={styles.toggleSwitch}>
+                                <input
+                                    type="checkbox"
+                                    name="has_maintenance"
+                                    checked={formData.has_maintenance}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, has_maintenance: e.target.checked }))}
+                                />
+                                <span className={styles.toggleSlider}></span>
+                            </label>
+                        </div>
+
+                        {formData.has_maintenance && (
+                            <>
+                                <div className={styles.gridTwo}>
+                                    <div className="form-group">
+                                        <label className="label">Valor Mensal (R$)</label>
+                                        <input
+                                            type="number"
+                                            name="maintenance_price"
+                                            value={formData.maintenance_price}
+                                            onChange={handleChange}
+                                            className="input"
+                                            step="0.01"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="label">Formas de Pagamento</label>
+                                        <select
+                                            name="maintenance_payment_method"
+                                            value={formData.maintenance_payment_method}
+                                            onChange={handleChange}
+                                            className="select"
+                                        >
+                                            <option value="pix_cartao">PIX ou Cartão</option>
+                                            <option value="pix">Apenas PIX</option>
+                                            <option value="cartao">Apenas Cartão</option>
+                                            <option value="debito_auto">Débito Automático</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="label">O que está incluso</label>
+                                    <textarea
+                                        name="maintenance_description"
+                                        value={formData.maintenance_description}
+                                        onChange={handleChange}
+                                        className="input"
+                                        rows={3}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Visual */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>🎨 Personalização Visual</h3>
+
+                        <div className="form-group">
+                            <label className="label">Cor Principal</label>
+                            <div className={styles.colorPicker}>
+                                <input type="color" name="primary_color" value={formData.primary_color} onChange={handleChange} className={styles.colorInput} />
+                                <span>{formData.primary_color}</span>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="label">Benefícios</label>
+                            <div className={styles.benefitsGrid}>
+                                {BENEFITS_OPTIONS.map(benefit => (
+                                    <label key={benefit.id} className={`${styles.benefitCard} ${formData.benefits.includes(benefit.id) ? styles.selected : ''}`}>
+                                        <input type="checkbox" checked={formData.benefits.includes(benefit.id)} onChange={() => toggleBenefit(benefit.id)} />
+                                        <span className={styles.benefitIcon}>{benefit.icon}</span>
+                                        <span className={styles.benefitLabel}>{benefit.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div className={styles.actions}>
+                    <Link href="/admin" className="btn btn-secondary">Cancelar</Link>
+                    <button type="submit" disabled={saving} className="btn btn-primary">
+                        {saving ? 'Salvando...' : '✓ Salvar Alterações'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+}

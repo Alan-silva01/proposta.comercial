@@ -1,0 +1,217 @@
+# DESIGN SYSTEM — TOKENS SEMÂNTICOS
+
+## VISÃO GERAL
+
+Design System baseado em estética **Dark Mode Premium** com acentos em **Verde Neon (Lima)**, linhas finas decorativas, efeitos de glow e tipografia moderna de alto contraste.
+
+---
+
+## PALETA DE CORES (Valores Reais → Tokens)
+
+### Cores Core
+
+| Valor HEX | Token           | Uso Principal                       |
+|-----------|-----------------|-------------------------------------|
+| `#000000` | `brand-dark`    | Fundo principal (preto puro)        |
+| `#0D0F0D` | `brand-dark-2`  | Fundo secundário (quase preto)      |
+| `#121212` | `brand-dark-3`  | Superfícies elevadas, cards         |
+| `#BFFF00` | `brand-neon`    | Cor de destaque principal (lima)    |
+| `#A3D900` | `brand-neon-2`  | Variação do neon (hover)            |
+| `#FFFFFF` | `brand-light`   | Texto principal, elementos brancos  |
+| `#A1A1A1` | `brand-muted`   | Texto secundário, legendas          |
+
+---
+
+## CORES SEMÂNTICAS
+
+### Texto
+
+* **text-primary**: `#FFFFFF` — títulos, texto importante
+* **text-secondary**: `#A1A1A1` — legendas, descrições
+* **text-muted**: `#555555` — placeholders, texto desabilitado
+* **text-on-dark**: `#FFFFFF` — texto sobre fundos escuros
+* **text-on-brand**: `#000000` — texto sobre cor neon (lima)
+
+### Superfícies (fundos)
+
+* **surface-page**: `#000000` — fundo principal da página
+* **surface-section**: `#0D0F0D` — fundo de seções alternadas
+* **surface-card**: `#121212` — fundo de cards
+* **surface-subtle**: `#1A1A1A` — áreas de destaque leve
+* **surface-elevated**: `#1E1E1E` — elementos elevados (modais)
+
+### Ações (botões, links)
+
+* **action-primary**: `#BFFF00` — botões principais, CTAs
+* **action-primary-hover**: `#A3D900` — hover de action-primary
+* **action-primary-active**: `#8FBF00` — estado pressed
+* **action-secondary**: `#FFFFFF` — botões secundários (texto)
+* **action-strong**: `#FFFFFF` — CTAs de alta conversão (fundo branco)
+* **action-strong-hover**: `#E0E0E0` — hover de action-strong
+
+### Bordas
+
+* **border-default**: `#333333` — bordas padrão
+* **border-subtle**: `#1E1E1E` — bordas muito sutis
+* **border-focus**: `#BFFF00` — cor do focus ring (neon)
+* **border-decorative**: `#444444` — linhas decorativas finas
+
+### Status
+
+* **status-success**: `#BFFF00` — sucesso, confirmação (verde neon)
+* **status-warning**: `#FFB800` — alertas, atenção
+* **status-error**: `#FF4444` — erros, problemas
+
+---
+
+## ESPAÇAMENTO
+
+Use apenas estes valores:
+
+* **space-1**: 4px (mínimo, ícones inline)
+* **space-2**: 8px (gaps pequenos)
+* **space-3**: 12px (gaps médios internos)
+* **space-4**: 16px (padding padrão)
+* **space-6**: 24px (padding de cards)
+* **space-8**: 32px (gaps entre seções)
+* **space-12**: 48px (padding de seções)
+* **space-16**: 64px (padding vertical de seções grandes)
+* **space-20**: 80px (seções hero)
+
+---
+
+## TIPOGRAFIA
+
+### Fontes Recomendadas
+
+* **Primária (Títulos)**: `Outfit`, `Montserrat`, ou `Poppins` — Bold/Black
+* **Secundária (Corpo)**: `Inter`, `Roboto`, ou `DM Sans` — Regular/Medium
+
+### Tamanhos
+
+* **text-xs**: 12px (badges, labels pequenos)
+* **text-sm**: 14px (texto secundário, captions)
+* **text-base**: 16px (corpo de texto)
+* **text-lg**: 18px (texto destacado)
+* **text-xl**: 20px (subtítulos)
+* **text-2xl**: 24px (títulos de cards)
+* **text-3xl**: 30px (títulos de seção)
+* **text-4xl**: 36px (títulos principais)
+* **text-5xl**: 48px (headlines hero)
+* **text-6xl**: 64px (headlines impactantes)
+
+### Pesos
+
+* **font-normal**: 400 (corpo)
+* **font-medium**: 500 (ênfase leve)
+* **font-semibold**: 600 (títulos, botões)
+* **font-bold**: 700 (headlines)
+* **font-black**: 900 (headlines hero impactantes)
+
+---
+
+## BORDAS E SOMBRAS
+
+### Border Radius
+
+* **radius-sm**: 6px (inputs, badges)
+* **radius-md**: 8px (botões)
+* **radius-lg**: 12px (cards pequenos)
+* **radius-xl**: 16px (cards grandes)
+* **radius-2xl**: 24px (cards hero)
+* **radius-full**: 9999px (avatares, pills, tags)
+
+### Sombras
+
+* **shadow-sm**: `0 1px 2px rgba(0,0,0,0.5)` — sutil
+* **shadow-md**: `0 4px 12px rgba(0,0,0,0.6)` — cards
+* **shadow-lg**: `0 8px 24px rgba(0,0,0,0.8)` — modais
+* **shadow-card**: `0 4px 20px rgba(0,0,0,0.4)`
+* **shadow-card-hover**: `0 8px 30px rgba(0,0,0,0.6)`
+* **shadow-button-primary**: `0 0 20px rgba(191,255,0,0.4)` — glow neon
+
+### Efeitos de Glow (Neon)
+
+* **glow-neon**: `0 0 20px rgba(191,255,0,0.5)` — brilho sutil
+* **glow-neon-strong**: `0 0 40px rgba(191,255,0,0.7)` — brilho forte
+* **glow-neon-text**: `0 0 10px rgba(191,255,0,0.8)` — para texto
+
+---
+
+## COMPONENTES (padrões obrigatórios)
+
+### Botões
+
+* **Primary (Neon)**: bg `action-primary`, texto `text-on-brand` (preto), `radius-full`, `shadow-button-primary`
+* **Secondary**: bg `transparent`, texto `text-primary`, borda `border-default`, `radius-full`
+* **Strong (CTA Branco)**: bg `action-strong`, texto `#000000`, `radius-full`
+* **Ghost**: bg `transparent`, texto `brand-neon`, sem borda
+
+### Cards
+
+* **Background**: `surface-card`
+* **Radius**: `radius-xl` ou `radius-2xl`
+* **Shadow**: `shadow-card`
+* **Padding**: `space-6`
+* **Hover**: `shadow-card-hover`
+* **Border (opcional)**: 1px `border-subtle`
+
+### Inputs
+
+* **Background**: `surface-card`
+* **Border**: 1px `border-default`
+* **Radius**: `radius-md`
+* **Focus**: borda `border-focus` com `glow-neon`
+
+### Tags / Pills
+
+* **Background**: `brand-neon`
+* **Texto**: `text-on-brand` (preto)
+* **Radius**: `radius-full`
+* **Padding**: `space-2` horizontal, `space-1` vertical
+
+### Linhas Decorativas
+
+* **Cor**: `border-decorative`
+* **Espessura**: 1px
+* **Uso**: Conectar elementos, criar hierarquia visual
+
+---
+
+## ESTILO VISUAL
+
+### Características Principais
+
+1. **Alto Contraste**: Fundo preto puro com texto branco
+2. **Acentos Neon**: Verde lima (#BFFF00) para CTAs e destaques
+3. **Efeitos de Glow**: Box-shadow neon em elementos interativos
+4. **Linhas Finas**: Bordas decorativas conectando elementos
+5. **Pills Arredondados**: Botões e tags com radius-full
+6. **Tipografia Bold**: Headlines em peso 700-900
+
+### Ícones Decorativos
+
+* **Asterisco/Estrela**: Símbolo gráfico em neon (como nas imagens)
+* **Setas**: Elementos direcionais sutis
+
+---
+
+## ESTADOS OBRIGATÓRIOS
+
+Todo componente interativo DEVE ter:
+
+1. **Default**: estado normal
+2. **Hover**: feedback visual + leve glow
+3. **Active/Pressed**: escurecimento da cor
+4. **Focus**: ring visível em neon para acessibilidade
+5. **Disabled**: opacidade 50%, cursor not-allowed
+
+---
+
+## REGRAS FINAIS
+
+1. Nunca invente valores. Use apenas tokens.
+2. Se um token não existe pro que você precisa, pergunte.
+3. Mantenha consistência: mesmo componente = mesmos tokens sempre.
+4. Mobile-first: comece pelo mobile, adapte pro desktop.
+5. **Priorize o contraste alto** e a estética premium/dark.
