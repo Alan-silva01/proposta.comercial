@@ -562,21 +562,16 @@
     background: #FFFFFF;
     border: 1px solid #F0F0F0;
     border-radius: var(--radius-2xl);
-    padding: var(--space-12);
-    /* Increased padding */
+    padding: var(--space-6) var(--space-8);
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: var(--shadow-minimal);
-    height: 100%;
-    min-height: 280px;
-    /* Added min-height */
+    height: auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    /* Center content vertically */
+    justify-content: flex-start;
     flex: 0 1 45%;
-    min-width: 380px;
-    /* Increased min-width */
-    max-width: 600px;
+    min-width: 280px;
+    max-width: 500px;
 }
 
 .benefitCard:hover {
