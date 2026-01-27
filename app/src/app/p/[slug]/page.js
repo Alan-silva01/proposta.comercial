@@ -697,7 +697,7 @@ export default function ProposalPage() {
                             </div>
                             <div className={styles.statCard}>
                                 <span className={styles.statValue}>{proposal.leads_showed_up || 0}</span>
-                                <span className={styles.statLabel}>Show-up</span>
+                                <span className={styles.statLabel}>Compareceram</span>
                             </div>
                         </>
                     )}
