@@ -53,9 +53,17 @@ export function calculateROI(proposal, conservative = false) {
   }
 
   const projectedRevenue = projectedConverted * ticketValue;
-  const revenueIncrease = Math.max(0, (projectedRevenue - currentRevenue) / divisor);
+
+  // Conservative mode: divide only the INCREASE by 2, not the total
+  const rawRevenueIncrease = Math.max(0, projectedRevenue - currentRevenue);
+  const revenueIncrease = rawRevenueIncrease / divisor;
+
+  // Calculate the increase in conversions
+  const rawConversionIncrease = Math.max(0, projectedConverted - (leads_converted || 0));
+  const conversionIncrease = Math.round(rawConversionIncrease / divisor);
+
   const roiPercentage = currentRevenue > 0
-    ? Math.round(((projectedRevenue / currentRevenue) - 1) * 100) / divisor
+    ? Math.round(((currentRevenue + revenueIncrease) / currentRevenue - 1) * 100)
     : 0;
 
   return {
@@ -63,7 +71,8 @@ export function calculateROI(proposal, conservative = false) {
     projectedRevenue: currentRevenue + revenueIncrease,
     revenueIncrease,
     roiPercentage,
-    projectedConverted: Math.round(projectedConverted / divisor),
+    // In conservative mode, add only half of the increase to current conversions
+    projectedConverted: (leads_converted || 0) + conversionIncrease,
     projectedLeadsResponded,
   };
 }
