@@ -29,7 +29,7 @@ const PAYMENT_METHODS = {
 };
 
 // Reveal Animation Wrapper
-function RevealSection({ children, className = '' }) {
+function RevealSection({ children, className = '', threshold = 0.1 }) {
     const sectionRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -40,7 +40,7 @@ function RevealSection({ children, className = '' }) {
                     setIsVisible(true);
                 }
             },
-            { threshold: 0.5 } // Trigger when 50% visible
+            { threshold: threshold }
         );
 
         if (sectionRef.current) {
@@ -48,7 +48,7 @@ function RevealSection({ children, className = '' }) {
         }
 
         return () => observer.disconnect();
-    }, []);
+    }, [threshold]);
 
     return (
         <section
@@ -208,19 +208,22 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
         if (visibleAI < layersAI.length) setVisibleAI(prev => prev + 1);
     };
 
-    // Trigger collapse sequence when AI funnel is fully revealed
+    // Trigger collapse when AI funnel is fully revealed AND user clicks
     useEffect(() => {
         if (visibleAI === layersAI.length && funnelState === 'normal') {
-            const timer = setTimeout(() => {
+            const handleClick = () => {
                 setFunnelState('collapsing');
 
                 // After animation completes (Last item delay 1.5s + Duration 2s = 3.5s)
                 setTimeout(() => {
                     setFunnelState('destroyed');
                 }, 3500);
-            }, 3000); // 3 seconds delay before starting
+            };
 
-            return () => clearTimeout(timer);
+            // Add click listener to document
+            document.addEventListener('click', handleClick, { once: true });
+
+            return () => document.removeEventListener('click', handleClick);
         }
     }, [visibleAI, layersAI.length, funnelState]);
 
@@ -540,7 +543,7 @@ export default function ProposalPage() {
             {/* Com IA vs Sem IA Comparison - show if has comparison data or challenges */}
             {((proposal.comparison_with_ai && proposal.comparison_with_ai.length > 0) ||
                 (proposal.challenges && proposal.challenges.length > 0)) && (
-                    <RevealSection className={`${styles.section} ${styles.comparisonSection}`}>
+                    <RevealSection className={`${styles.section} ${styles.comparisonSection}`} threshold={0.83}>
                         <div className={styles.sectionHeader}>
                             <span className={styles.sectionTag}>Comparativo</span>
                             <h2>Sem IA <span className={styles.vsText}>vs</span> Com IA</h2>
