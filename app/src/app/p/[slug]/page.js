@@ -528,6 +528,28 @@ export default function ProposalPage() {
         <div className={styles.container} style={{ '--primary-color': primaryColor }}>
             {/* Hero Section */}
             <RevealSection className={styles.hero}>
+                {/* Background Media Layer */}
+                {proposal.hero_media && (
+                    <div className={styles.heroMediaBackground}>
+                        {proposal.hero_media.includes('.mp4') || proposal.hero_media.includes('.webm') ? (
+                            <video
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                className={styles.heroMediaVideo}
+                            >
+                                <source src={proposal.hero_media} type="video/mp4" />
+                            </video>
+                        ) : (
+                            <img
+                                src={proposal.hero_media}
+                                alt=""
+                                className={styles.heroMediaImage}
+                            />
+                        )}
+                    </div>
+                )}
                 <div className={styles.heroContent}>
                     <span className={styles.tag}>Proposta Comercial</span>
                     <h1 className={styles.heroTitle}>
