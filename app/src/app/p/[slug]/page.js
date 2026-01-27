@@ -40,7 +40,7 @@ function RevealSection({ children, className = '' }) {
                     setIsVisible(true);
                 }
             },
-            { threshold: 0.1 }
+            { threshold: 0.5 } // Trigger when 50% visible
         );
 
         if (sectionRef.current) {
@@ -600,6 +600,27 @@ export default function ProposalPage() {
                 </RevealSection>
             )}
 
+            {/* Benefits Section */}
+            <RevealSection className={styles.section}>
+                <div className={styles.sectionHeader}>
+                    <span className={styles.sectionTag}>Vantagens</span>
+                    <h2>Por que IA</h2>
+                </div>
+
+                <div className={styles.benefitsGrid}>
+                    {benefits.map(benefitId => {
+                        const benefit = BENEFITS_MAP[benefitId];
+                        if (!benefit) return null;
+                        return (
+                            <div key={benefitId} className={styles.benefitCard}>
+                                <h4 className={styles.benefitTitle}>{benefit.label}</h4>
+                                <p className={styles.benefitDesc}>{benefit.desc}</p>
+                            </div>
+                        );
+                    })}
+                </div>
+            </RevealSection>
+
             {/* Market Stats Section - always show */}
             <RevealSection className={`${styles.section} ${styles.statsSection}`}>
                 <div className={styles.sectionHeader}>
@@ -762,29 +783,6 @@ export default function ProposalPage() {
                     </div>
                 </div>
             </RevealSection>
-
-            {/* Benefits Section */}
-            <RevealSection className={styles.section}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Vantagens</span>
-                    <h2>Por que IA</h2>
-                </div>
-
-                <div className={styles.benefitsGrid}>
-                    {benefits.map(benefitId => {
-                        const benefit = BENEFITS_MAP[benefitId];
-                        if (!benefit) return null;
-                        return (
-                            <div key={benefitId} className={styles.benefitCard}>
-                                <h4 className={styles.benefitTitle}>{benefit.label}</h4>
-                                <p className={styles.benefitDesc}>{benefit.desc}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </RevealSection>
-
-
 
             {/* Roadmap Section */}
             <RevealSection className={`${styles.section} ${styles.roadmapSection}`}>
