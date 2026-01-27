@@ -58,11 +58,24 @@ export default function EditProposalPage() {
         maintenance_price: '',
         maintenance_description: '',
         maintenance_payment_method: 'pix_cartao',
+        // Roadmap
+        roadmap_analysis_days: '7',
+        roadmap_approval_days: '7',
+        roadmap_development_days: '21',
+        roadmap_testing_days: '14',
+        // Visual
         primary_color: '#BFFF00',
+        hero_media: '',
         benefits: [],
-        status: 'draft',
+        challenges: [],
+        // Comparison
+        comparison_with_ai: [],
+        comparison_without_ai: [],
+        market_stats: [],
+        // Costs
         cost_per_conversation: '',
         estimated_monthly_cost: '',
+        status: 'draft',
     });
 
     useEffect(() => {
@@ -105,11 +118,24 @@ export default function EditProposalPage() {
             maintenance_price: data.maintenance_price?.toString() || '',
             maintenance_description: data.maintenance_description || '',
             maintenance_payment_method: data.maintenance_payment_method || 'pix_cartao',
+            // Roadmap
+            roadmap_analysis_days: data.roadmap_analysis_days?.toString() || '7',
+            roadmap_approval_days: data.roadmap_approval_days?.toString() || '7',
+            roadmap_development_days: data.roadmap_development_days?.toString() || '21',
+            roadmap_testing_days: data.roadmap_testing_days?.toString() || '14',
+            // Visual
             primary_color: data.primary_color || '#BFFF00',
+            hero_media: data.hero_media || '',
             benefits: data.benefits || [],
-            status: data.status || 'draft',
+            challenges: data.challenges || [],
+            // Comparison
+            comparison_with_ai: data.comparison_with_ai || [],
+            comparison_without_ai: data.comparison_without_ai || [],
+            market_stats: data.market_stats || [],
+            // Costs
             cost_per_conversation: data.cost_per_conversation?.toString() || '',
             estimated_monthly_cost: data.estimated_monthly_cost?.toString() || '',
+            status: data.status || 'draft',
         });
 
         setLoading(false);
@@ -156,11 +182,28 @@ export default function EditProposalPage() {
             maintenance_price: formData.has_maintenance ? parseFloat(formData.maintenance_price) || 0 : null,
             maintenance_description: formData.has_maintenance ? formData.maintenance_description : null,
             maintenance_payment_method: formData.has_maintenance ? formData.maintenance_payment_method : null,
+            // Roadmap
+            roadmap_analysis_days: parseInt(formData.roadmap_analysis_days) || 7,
+            roadmap_approval_days: parseInt(formData.roadmap_approval_days) || 7,
+            roadmap_development_days: parseInt(formData.roadmap_development_days) || 21,
+            roadmap_testing_days: parseInt(formData.roadmap_testing_days) || 14,
+            roadmap_total_days: (parseInt(formData.roadmap_analysis_days) || 7) +
+                (parseInt(formData.roadmap_approval_days) || 7) +
+                (parseInt(formData.roadmap_development_days) || 21) +
+                (parseInt(formData.roadmap_testing_days) || 14),
+            // Visual
             primary_color: formData.primary_color,
+            hero_media: formData.hero_media || null,
             benefits: formData.benefits,
-            status: formData.status,
+            challenges: formData.challenges,
+            // Comparison
+            comparison_with_ai: formData.comparison_with_ai.filter(item => item.trim() !== ''),
+            comparison_without_ai: formData.comparison_without_ai.filter(item => item.trim() !== ''),
+            market_stats: formData.market_stats.filter(stat => stat.text?.trim() !== '' || stat.highlight?.trim() !== ''),
+            // Costs
             cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
             estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
+            status: formData.status,
             updated_at: new Date().toISOString(),
         };
 
@@ -453,11 +496,27 @@ export default function EditProposalPage() {
                     <div className={styles.section}>
                         <h3 className={styles.sectionTitle}>🎨 Personalização Visual</h3>
 
-                        <div className="form-group">
-                            <label className="label">Cor Principal</label>
-                            <div className={styles.colorPicker}>
-                                <input type="color" name="primary_color" value={formData.primary_color} onChange={handleChange} className={styles.colorInput} />
-                                <span>{formData.primary_color}</span>
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Cor Principal</label>
+                                <div className={styles.colorPicker}>
+                                    <input type="color" name="primary_color" value={formData.primary_color} onChange={handleChange} className={styles.colorInput} />
+                                    <span>{formData.primary_color}</span>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Mídia de Fundo (Hero)</label>
+                                <input
+                                    type="text"
+                                    name="hero_media"
+                                    value={formData.hero_media}
+                                    onChange={handleChange}
+                                    className="input"
+                                    placeholder="URL da imagem ou vídeo de fundo"
+                                />
+                                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
+                                    URL de imagem (.jpg, .png, .webp) ou vídeo (.mp4, .mov, .webm)
+                                </small>
                             </div>
                         </div>
 
@@ -472,6 +531,40 @@ export default function EditProposalPage() {
                                     </label>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Cronograma de Entrega */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>📅 Cronograma de Entrega</h3>
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Análise de Processos (dias)</label>
+                                <input type="number" name="roadmap_analysis_days" value={formData.roadmap_analysis_days} onChange={handleChange} className="input" min="1" />
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Aprovação dos Agentes (dias)</label>
+                                <input type="number" name="roadmap_approval_days" value={formData.roadmap_approval_days} onChange={handleChange} className="input" min="1" />
+                            </div>
+                        </div>
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Desenvolvimento IA (dias)</label>
+                                <input type="number" name="roadmap_development_days" value={formData.roadmap_development_days} onChange={handleChange} className="input" min="1" />
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Testes e Implementação (dias)</label>
+                                <input type="number" name="roadmap_testing_days" value={formData.roadmap_testing_days} onChange={handleChange} className="input" min="1" />
+                            </div>
+                        </div>
+                        <div style={{ padding: 'var(--space-4)', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+                            <span>⏱️ Prazo Total: </span>
+                            <strong>
+                                {(parseInt(formData.roadmap_analysis_days) || 0) +
+                                    (parseInt(formData.roadmap_approval_days) || 0) +
+                                    (parseInt(formData.roadmap_development_days) || 0) +
+                                    (parseInt(formData.roadmap_testing_days) || 0)} dias
+                            </strong>
                         </div>
                     </div>
                 </section>
