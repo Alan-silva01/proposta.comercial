@@ -190,13 +190,15 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
 
     // Define layers for With AI
     const projectedResponded = Math.round(proposal.leads_received * (proposal.projected_response_rate / 100));
-    const projectedScheduled = isScheduling ? Math.round(proposal.leads_received * 0.6) : 0; // Est. 60%
+    // Use projected_conversion_rate for scheduling (not hardcoded 60%)
+    const schedulingConversionRate = proposal.projected_conversion_rate || 20;
+    const projectedScheduled = isScheduling ? Math.round(projectedResponded * (schedulingConversionRate / 100)) : 0;
     const projectedSales = roi?.projectedConverted || 0;
 
     const layersAI = [
         { label: 'Leads', value: proposal.leads_received, metric: '100%' },
         { label: 'Respondidos', value: projectedResponded, metric: formatPercent(proposal.projected_response_rate) },
-        ...(isScheduling ? [{ label: 'Agendados', value: projectedScheduled, metric: '60%' }] : []),
+        ...(isScheduling ? [{ label: 'Agendados', value: projectedScheduled, metric: formatPercent(schedulingConversionRate) }] : []),
         { label: 'Vendas', value: projectedSales, metric: formatPercent((projectedSales / proposal.leads_received) * 100) }
     ];
 
