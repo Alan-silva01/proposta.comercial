@@ -119,6 +119,7 @@ export default function NewProposalPage() {
             { text: 'Follow-up automatizado aumenta em', highlight: '47% as conversões' },
             { text: 'Empresas com IA no atendimento', highlight: 'crescem 2x mais rápido' },
         ],
+        diagnosis_text: '',
     });
 
     function handleChange(e) {
@@ -263,6 +264,7 @@ export default function NewProposalPage() {
             market_stats: formData.market_stats.filter(stat => stat.text.trim() !== '' || (stat.highlight && stat.highlight.trim() !== '')),
             cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
             estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
+            diagnosis_text: formData.diagnosis_text,
             status: 'draft',
         };
 
@@ -498,6 +500,19 @@ export default function NewProposalPage() {
                                 placeholder="Ex: 2000 (se cliente compra recorrente)"
                                 step="0.01"
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="label">Análise do Diagnóstico (Opcional)</label>
+                            <textarea
+                                name="diagnosis_text"
+                                value={formData.diagnosis_text}
+                                onChange={handleChange}
+                                className="input"
+                                placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
+                                style={{ minHeight: '100px', resize: 'vertical' }}
+                            />
+                            <small className={styles.hint}>Texto que aparecerá no slide de diagnóstico para complementar os gargalos.</small>
                         </div>
                     </div>
                 )}

@@ -78,6 +78,7 @@ export default function EditProposalPage() {
         // Costs
         cost_per_conversation: '',
         estimated_monthly_cost: '',
+        diagnosis_text: '',
         status: 'draft',
     });
 
@@ -140,6 +141,7 @@ export default function EditProposalPage() {
             // Costs
             cost_per_conversation: data.cost_per_conversation?.toString() || '',
             estimated_monthly_cost: data.estimated_monthly_cost?.toString() || '',
+            diagnosis_text: data.diagnosis_text || '',
             status: data.status || 'draft',
         });
 
@@ -287,6 +289,7 @@ export default function EditProposalPage() {
             // Costs
             cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
             estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
+            diagnosis_text: formData.diagnosis_text,
             status: formData.status,
             updated_at: new Date().toISOString(),
         };
@@ -636,6 +639,19 @@ export default function EditProposalPage() {
                                 />
                             </div>
                         </div>
+
+                        <div className="form-group">
+                            <label className="label">Análise do Diagnóstico (Opcional)</label>
+                            <textarea
+                                name="diagnosis_text"
+                                value={formData.diagnosis_text}
+                                onChange={handleChange}
+                                className="input"
+                                placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
+                                style={{ minHeight: '100px', resize: 'vertical' }}
+                            />
+                            <p className={styles.inputHint}>Texto que aparecerá no slide de diagnóstico para complementar os gargalos.</p>
+                        </div>
                     </div>
 
                     {/* Visual */}
@@ -894,6 +910,39 @@ export default function EditProposalPage() {
                             >
                                 + Adicionar estatística
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Custos IA (OpenAI) */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>🤖 Custos de IA (API OpenAI)</h3>
+                        <div className={styles.gridTwo}>
+                            <div className="form-group">
+                                <label className="label">Custo por Conversa (R$)</label>
+                                <input
+                                    type="number"
+                                    name="cost_per_conversation"
+                                    value={formData.cost_per_conversation}
+                                    onChange={handleChange}
+                                    className="input"
+                                    placeholder="Ex: 0.15"
+                                    step="0.01"
+                                />
+                                <p className={styles.inputHint}>Valor aproximado por atendimento completo</p>
+                            </div>
+                            <div className="form-group">
+                                <label className="label">Estimativa Mensal (R$)</label>
+                                <input
+                                    type="number"
+                                    name="estimated_monthly_cost"
+                                    value={formData.estimated_monthly_cost}
+                                    onChange={handleChange}
+                                    className="input"
+                                    placeholder="Ex: 150.00"
+                                    step="0.01"
+                                />
+                                <p className={styles.inputHint}>Baseado no volume de leads recebidos</p>
+                            </div>
                         </div>
                     </div>
 

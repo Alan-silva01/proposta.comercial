@@ -344,7 +344,25 @@ export default function ProposalPage() {
     const [roi, setRoi] = useState(null);
     const [currentSlide, setCurrentSlide] = useState(0);
 
-    const slidesCount = 9; // Hero, Diagnosis, Solution, Funnel, Impacto, Potencial, Roadmap, Pricing, CTA
+    const hasComparison = (proposal?.comparison_with_ai?.length > 0 || proposal?.comparison_without_ai?.length > 0);
+    const hasLLMCosts = !!(proposal?.cost_per_conversation || proposal?.estimated_monthly_cost);
+
+    // Hero (0), Diagnosis (1), Solution (2), [Comparison], Funnel, Impacto, Potencial, Roadmap, Pricing, [LLM], CTA
+    const slidesOrder = [
+        'hero',
+        'diagnosis',
+        'solution',
+        ...(hasComparison ? ['comparison'] : []),
+        'funnel',
+        'impact',
+        'potential',
+        'roadmap',
+        'pricing',
+        ...(hasLLMCosts ? ['llm'] : []),
+        'cta'
+    ];
+
+    const slidesCount = slidesOrder.length;
 
     useEffect(() => {
         fetchProposal();
@@ -425,325 +443,447 @@ export default function ProposalPage() {
             {/* Slides Track */}
             <div className={slideStyles.slidesTrack} style={{ transform: `translateX(-${currentSlide * 100}vw)` }}>
 
-                {/* SLIDE 1: HERO */}
-                <div className={`${slideStyles.slide} ${currentSlide === 0 ? slideStyles.activeSlide : ''}`}>
-                    <div className={styles.heroMediaBackground}>
-                        {proposal.hero_media && (
-                            proposal.hero_media.match(/\.(mp4|webm|mov)$/) ?
-                                <video autoPlay muted loop playsInline className={styles.heroMediaVideo}><source src={proposal.hero_media} /></video> :
-                                <img src={proposal.hero_media} className={styles.heroMediaImage} alt="" />
-                        )}
-                    </div>
-                    <div className={`${slideStyles.slideContent} ${styles.heroContent}`} style={{ textAlign: 'center', zIndex: 1 }}>
-                        <span className={styles.tag}>Proposta Comercial</span>
-                        <h1 className={styles.heroTitle}>
-                            <TypewrittenText text={proposal.company_name} isActive={currentSlide === 0} />
-                        </h1>
-                        <p className={styles.heroSubtitle}>
-                            Olá, <strong>{proposal.client_name}</strong>! Preparamos uma solução de IA para transformar seu atendimento.
-                        </p>
-                    </div>
-                </div>
+                {slidesOrder.map((slideId, index) => {
+                    const isActive = currentSlide === index;
 
-                {/* SLIDE 2: DIAGNOSIS / CHALLENGES */}
-                <div className={`${slideStyles.slide} ${currentSlide === 1 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 1}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Diagnóstico</span>
-                                <h2>O cenário atual</h2>
-                                <p className={styles.sectionSubtitle}>Identificamos oportunidades de melhoria</p>
-                            </div>
-
-                            <div className={styles.vsCards}>
-                                <div className={`${styles.vsCard} ${styles.withoutAI}`}>
-                                    <h3>Gargalos Encontrados</h3>
-                                    <ul className={styles.vsList}>
-                                        {(proposal.challenges && proposal.challenges.length > 0 ? proposal.challenges : [
-                                            'Tempo de resposta elevado', 'Perda de leads fora do horário', 'Falta de padronização', 'Dificuldade em escalar'
-                                        ]).map((item, i) => (
-                                            <li key={i}><span className={styles.crossIcon}>—</span> {item}</li>
-                                        ))}
-                                    </ul>
+                    if (slideId === 'hero') {
+                        return (
+                            <div key="hero" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`}>
+                                <div className={styles.heroMediaBackground}>
+                                    {proposal.hero_media && (
+                                        proposal.hero_media.match(/\.(mp4|webm|mov)$/) ?
+                                            <video autoPlay muted loop playsInline className={styles.heroMediaVideo}><source src={proposal.hero_media} /></video> :
+                                            <img src={proposal.hero_media} className={styles.heroMediaImage} alt="" />
+                                    )}
                                 </div>
-                                <div className={styles.statCard} style={{ maxWidth: '400px', margin: '0 auto', border: '1px solid var(--brand-neon)' }}>
-                                    <span className={styles.statValue}>{proposal.leads_received}</span>
-                                    <span className={styles.statLabel}>Leads Gerados/Mês</span>
-                                    <span className={styles.statPercent} style={{ color: 'var(--brand-neon)', fontWeight: 'bold' }}>Base para análise</span>
+                                <div className={`${slideStyles.slideContent} ${styles.heroContent}`} style={{ textAlign: 'center', zIndex: 1 }}>
+                                    <span className={styles.tag}>Proposta Comercial</span>
+                                    <h1 className={styles.heroTitle}>
+                                        <TypewrittenText text={proposal.company_name} isActive={isActive} />
+                                    </h1>
+                                    <p className={styles.heroSubtitle}>
+                                        Olá, <strong>{proposal.client_name}</strong>! Preparamos uma solução de IA para transformar seu atendimento.
+                                    </p>
                                 </div>
                             </div>
-                        </RevealSection>
-                    </div>
-                </div>
+                        );
+                    }
 
-                {/* SLIDE 3: SOLUTION */}
-                <div className={`${slideStyles.slide} ${currentSlide === 2 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 2}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag} style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)' }}>Solução Personalizada</span>
-                                <h2 style={{ fontSize: '4.5rem', fontWeight: 900 }}>A Solução</h2>
-                            </div>
-                            <div className={styles.benefitsGrid}>
-                                {(proposal.benefits && proposal.benefits.length > 0) ? (
-                                    proposal.benefits.map(benefitId => {
-                                        const mapped = BENEFITS_MAP[benefitId];
-                                        return (
-                                            <div key={benefitId} className={styles.benefitCard}>
-                                                <h4 className={styles.benefitTitle}>{mapped ? mapped.label : benefitId}</h4>
-                                                {mapped && <p className={styles.benefitDesc}>{mapped.desc}</p>}
+                    if (slideId === 'diagnosis') {
+                        return (
+                            <div key="diagnosis" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Diagnóstico</span>
+                                            <h2>O cenário atual</h2>
+                                            <p className={styles.sectionSubtitle}>Identificamos oportunidades de melhoria</p>
+                                        </div>
+
+                                        <div className={styles.diagnosisGrid}>
+                                            <div className={styles.diagnosisCards}>
+                                                <div className={`${styles.vsCard} ${styles.withoutAI}`} style={{ width: '100%', marginBottom: '20px' }}>
+                                                    <h3>Gargalos Encontrados</h3>
+                                                    <ul className={styles.vsList}>
+                                                        {(proposal.challenges && proposal.challenges.length > 0 ? proposal.challenges : [
+                                                            'Tempo de resposta elevado', 'Perda de leads fora do horário', 'Falta de padronização', 'Dificuldade em escalar'
+                                                        ]).map((item, i) => (
+                                                            <li key={i}><span className={styles.crossIcon}>—</span> {item}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <div className={styles.statCard} style={{ width: '100%', border: '1px solid var(--brand-neon)' }}>
+                                                    <span className={styles.statValue}>{proposal.leads_received}</span>
+                                                    <span className={styles.statLabel}>Leads Gerados/Mês</span>
+                                                </div>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className={styles.benefitCard} style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
-                                        <h4 className={styles.benefitTitle}>Configuração em andamento</h4>
-                                        <p className={styles.benefitDesc}>Definindo os melhores benefícios para sua operação.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </RevealSection>
-                    </div>
-                </div>
 
-                {/* SLIDE 4: FUNNEL COMPARISON */}
-                <div className={`${slideStyles.slide} ${currentSlide === 3 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <FunnelComparison
-                            proposal={proposal}
-                            roi={roi}
-                            formatCurrency={formatCurrency}
-                            formatPercent={formatPercent}
-                            isActive={currentSlide === 3}
-                        />
-                    </div>
-                </div>
-
-                {/* SLIDE 5: REVENUE COMPARISON (IMPACTO) */}
-                <div className={`${slideStyles.slide} ${currentSlide === 4 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 4}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Viabilidade Final</span>
-                                <h2>Impacto Financeiro</h2>
-                            </div>
-
-                            <div className={styles.revenueComparisonGrid}>
-                                <div className={styles.revenueCol}>
-                                    <span className={styles.revenueColTag}>Cenário Atual</span>
-                                    <div className={styles.revenueMainValue}>{formatCurrency(roi?.currentRevenue)}</div>
-                                    <div className={styles.revenueSubDetail}>Conversão: {formatPercent(currentConversionRate)}</div>
-                                    <div className={styles.revenueSubDetail}>{proposal.leads_responded || 0} leads respondidos/mês</div>
-                                </div>
-
-                                <div className={styles.revenueVS}>VS</div>
-
-                                <div className={styles.revenueCol} style={{ border: '1px solid var(--brand-neon)' }}>
-                                    <span className={styles.revenueColTag} style={{ color: 'var(--brand-neon)' }}>Nossa Solução</span>
-                                    <div className={styles.revenueMainValue}>{formatCurrency(roi?.projectedRevenue)}</div>
-                                    <div className={styles.revenueSubDetail}>
-                                        Nova Conversão: {roi?.projectedLeadsResponded > 0
-                                            ? formatPercent((roi.projectedConverted / roi.projectedLeadsResponded) * 100)
-                                            : formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}
-                                    </div>
-                                    <div className={styles.revenueSubDetail}>{roi?.projectedLeadsResponded || proposal.leads_received} leads respondidos/mês</div>
+                                            {proposal.diagnosis_text && (
+                                                <div className={styles.diagnosisTextSide}>
+                                                    <div className={styles.diagnosisTextContent}>
+                                                        <TypewrittenText
+                                                            text={proposal.diagnosis_text}
+                                                            isActive={isActive}
+                                                            speed={30}
+                                                            delay={800}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </RevealSection>
                                 </div>
                             </div>
+                        );
+                    }
 
-                            <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                                <button
-                                    onClick={() => setConservative(!conservative)}
-                                    className={styles.conservativeToggle}
-                                    style={{
-                                        background: conservative ? 'var(--brand-neon)' : 'transparent',
-                                        color: conservative ? 'black' : 'var(--brand-neon)',
-                                        border: '1px solid var(--brand-neon)',
-                                        padding: '12px 24px',
-                                        borderRadius: '30px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >
-                                    {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
-                                </button>
-                                <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
-                                    {conservative
-                                        ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
-                                        : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
-                                </p>
-                            </div>
-                        </RevealSection>
-                    </div>
-                </div>
-
-
-                {/* SLIDE 6: ROI PROJECTION (Potencial) */}
-                <div className={`${slideStyles.slide} ${currentSlide === 5 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 5} className={styles.roiSection}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Potencial Anual</span>
-                                <h2>Crescimento Estimado</h2>
-                            </div>
-
-                            <div className={styles.roiHighlight}>
-                                <div className={styles.roiNumber}>
-                                    <span className={styles.roiPlus}>+</span>
-                                    <span className={styles.roiValue}>
-                                        <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} isActive={currentSlide === 5} />
-                                    </span>
-                                </div>
-                                <span className={styles.roiLabel}>Faturamento adicional mensal {conservative && '(Conservador)'}</span>
-                            </div>
-
-                            <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '24px' }}>
-                                <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`} style={{ background: 'var(--brand-dark-2)', border: '1px solid var(--brand-neon)' }}>
-                                    <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>ROI Estimado em 12 Meses</span>
-                                    <ScratchCard>
-                                        <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.revenueIncrease * 12)}</span>
-                                    </ScratchCard>
+                    if (slideId === 'solution') {
+                        return (
+                            <div key="solution" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag} style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)' }}>Solução Personalizada</span>
+                                            <h2 style={{ fontSize: '4.5rem', fontWeight: 900 }}>A Solução</h2>
+                                        </div>
+                                        <div className={styles.benefitsGrid}>
+                                            {(proposal.benefits && proposal.benefits.length > 0) ? (
+                                                proposal.benefits.map(benefitId => {
+                                                    const mapped = BENEFITS_MAP[benefitId];
+                                                    return (
+                                                        <div key={benefitId} className={styles.benefitCard}>
+                                                            <h4 className={styles.benefitTitle}>{mapped ? mapped.label : benefitId}</h4>
+                                                            {mapped && <p className={styles.benefitDesc}>{mapped.desc}</p>}
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className={styles.benefitCard} style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                                                    <h4 className={styles.benefitTitle}>Configuração em andamento</h4>
+                                                    <p className={styles.benefitDesc}>Definindo os melhores benefícios para sua operação.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </RevealSection>
                                 </div>
                             </div>
-
-                            <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                                <button
-                                    onClick={() => setConservative(!conservative)}
-                                    className={styles.conservativeToggle}
-                                    style={{
-                                        background: conservative ? 'var(--brand-neon)' : 'transparent',
-                                        color: conservative ? 'black' : 'var(--brand-neon)',
-                                        border: '1px solid var(--brand-neon)',
-                                        padding: '12px 24px',
-                                        borderRadius: '30px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >
-                                    {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
-                                </button>
-                                <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
-                                    {conservative
-                                        ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
-                                        : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
-                                </p>
-                            </div>
-                        </RevealSection>
-                    </div>
-                </div>
-
-                {/* SLIDE 7: ROADMAP */}
-                <div className={`${slideStyles.slide} ${currentSlide === 6 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 6} className={styles.roadmapSection}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Cronograma</span>
-                                <h2>Plano de Entrega</h2>
-                            </div>
-                            {(() => {
-                                const totalDays = proposal.delivery_days || 30;
-                                const totalWeeks = Math.ceil(totalDays / 7);
-                                return (
-                                    <>
-                                        <div className={styles.roadmapContainer}>
-                                            <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', marginBottom: '20px', color: 'var(--brand-muted)', fontSize: '0.8rem' }}>
-                                                <div></div>
-                                                {Array.from({ length: totalWeeks }).map((_, i) => (
-                                                    <div key={i}>Sem {i + 1}</div>
-                                                ))}
+                        );
+                    }
+                    if (slideId === 'comparison') {
+                        return (
+                            <div key="comparison" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Diferencial</span>
+                                            <h2>Com IA vs Sem IA</h2>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 1fr", gap: '40px', marginTop: '40px' }}>
+                                            <div style={{ background: 'rgba(255, 68, 68, 0.05)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(255, 68, 68, 0.2)' }}>
+                                                <h3 style={{ color: '#FF4444', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span>✕</span> Sem Agente de IA
+                                                </h3>
+                                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                                    {proposal.comparison_without_ai?.map((item, i) => (
+                                                        <li key={i} style={{ marginBottom: '15px', display: 'flex', gap: '10px', color: 'var(--brand-muted)' }}>
+                                                            <span style={{ color: '#FF4444' }}>•</span> {item}
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
-                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Análise</div>
-                                                <div className={styles.roadmapBar} style={{ gridColumn: `2 / 3` }}></div>
-                                            </div>
-                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Setup</div>
-                                                <div className={styles.roadmapBar} style={{ gridColumn: `2 / ${Math.max(3, Math.ceil(totalWeeks * 0.6))}` }}></div>
-                                            </div>
-                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Testes</div>
-                                                <div className={styles.roadmapBar} style={{ gridColumn: `${Math.ceil(totalWeeks * 0.6)} / ${totalWeeks}` }}></div>
-                                            </div>
-                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Go-Live</div>
-                                                <div className={styles.roadmapBar} style={{ gridColumn: `${totalWeeks} / ${totalWeeks + 1}` }}></div>
+                                            <div style={{ background: 'rgba(191, 255, 0, 0.05)', padding: '30px', borderRadius: '20px', border: '1px solid rgba(191, 255, 0, 0.2)' }}>
+                                                <h3 style={{ color: 'var(--brand-neon)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span>✓</span> Com Agente de IA
+                                                </h3>
+                                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                                    {proposal.comparison_with_ai?.map((item, i) => (
+                                                        <li key={i} style={{ marginBottom: '15px', display: 'flex', gap: '10px', color: 'white' }}>
+                                                            <span style={{ color: 'var(--brand-neon)' }}>•</span> {item}
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
                                         </div>
+                                    </RevealSection>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (slideId === 'funnel') {
+                        return (
+                            <div key="funnel" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <FunnelComparison
+                                        proposal={proposal}
+                                        roi={roi}
+                                        formatCurrency={formatCurrency}
+                                        formatPercent={formatPercent}
+                                        isActive={isActive}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (slideId === 'impact') {
+                        return (
+                            <div key="impact" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Viabilidade Final</span>
+                                            <h2>Impacto Financeiro</h2>
+                                        </div>
+
+                                        <div className={styles.revenueComparisonGrid}>
+                                            <div className={styles.revenueCol}>
+                                                <span className={styles.revenueColTag}>Cenário Atual</span>
+                                                <div className={styles.revenueMainValue}>{formatCurrency(roi?.currentRevenue)}</div>
+                                                <div className={styles.revenueSubDetail}>Conversão: {formatPercent(currentConversionRate)}</div>
+                                                <div className={styles.revenueSubDetail}>{proposal.leads_responded || 0} leads respondidos/mês</div>
+                                            </div>
+
+                                            <div className={styles.revenueVS}>VS</div>
+
+                                            <div className={styles.revenueCol} style={{ border: '1px solid var(--brand-neon)' }}>
+                                                <span className={styles.revenueColTag} style={{ color: 'var(--brand-neon)' }}>Nossa Solução</span>
+                                                <div className={styles.revenueMainValue}>{formatCurrency(roi?.projectedRevenue)}</div>
+                                                <div className={styles.revenueSubDetail}>
+                                                    Nova Conversão: {roi?.projectedLeadsResponded > 0
+                                                        ? formatPercent((roi.projectedConverted / roi.projectedLeadsResponded) * 100)
+                                                        : formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}
+                                                </div>
+                                                <div className={styles.revenueSubDetail}>{roi?.projectedLeadsResponded || proposal.leads_received} leads respondidos/mês</div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginTop: '30px', textAlign: 'center' }}>
+                                            <button
+                                                onClick={() => setConservative(!conservative)}
+                                                className={styles.conservativeToggle}
+                                                style={{
+                                                    background: conservative ? 'var(--brand-neon)' : 'transparent',
+                                                    color: conservative ? 'black' : 'var(--brand-neon)',
+                                                    border: '1px solid var(--brand-neon)',
+                                                    padding: '12px 24px',
+                                                    borderRadius: '30px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    transition: 'all 0.3s'
+                                                }}
+                                            >
+                                                {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
+                                            </button>
+                                            <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
+                                                {conservative
+                                                    ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
+                                                    : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
+                                            </p>
+                                        </div>
+                                    </RevealSection>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (slideId === 'potential') {
+                        return (
+                            <div key="potential" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive} className={styles.roiSection}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Potencial Anual</span>
+                                            <h2>Crescimento Estimado</h2>
+                                        </div>
+
+                                        <div className={styles.roiHighlight}>
+                                            <div className={styles.roiNumber}>
+                                                <span className={styles.roiPlus}>+</span>
+                                                <span className={styles.roiValue}>
+                                                    <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} isActive={isActive} />
+                                                </span>
+                                            </div>
+                                            <span className={styles.roiLabel}>Faturamento adicional mensal {conservative && '(Conservador)'}</span>
+                                        </div>
+
+                                        <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '24px' }}>
+                                            <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`} style={{ background: 'var(--brand-dark-2)', border: '1px solid var(--brand-neon)' }}>
+                                                <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>ROI Estimado em 12 Meses</span>
+                                                <ScratchCard>
+                                                    <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.revenueIncrease * 12)}</span>
+                                                </ScratchCard>
+                                            </div>
+                                        </div>
+
                                         <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                                            <span style={{ fontSize: '1.2rem', color: 'var(--brand-muted)' }}>Prazo estimado: <strong style={{ color: 'var(--brand-neon)' }}>{totalDays} dias</strong> para operação total.</span>
+                                            <button
+                                                onClick={() => setConservative(!conservative)}
+                                                className={styles.conservativeToggle}
+                                                style={{
+                                                    background: conservative ? 'var(--brand-neon)' : 'transparent',
+                                                    color: conservative ? 'black' : 'var(--brand-neon)',
+                                                    border: '1px solid var(--brand-neon)',
+                                                    padding: '12px 24px',
+                                                    borderRadius: '30px',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    transition: 'all 0.3s'
+                                                }}
+                                            >
+                                                {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
+                                            </button>
+                                            <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
+                                                {conservative
+                                                    ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
+                                                    : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
+                                            </p>
                                         </div>
-                                    </>
-                                );
-                            })()}
-                        </RevealSection>
-                    </div>
-                </div>
-
-                {/* SLIDE 8: INVESTMENT */}
-                <div className={`${slideStyles.slide} ${currentSlide === 7 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 7} className={styles.pricingSection}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Investimento</span>
-                                <h2>Condições Especiais</h2>
-                            </div>
-                            <div className={styles.pricingGrid}>
-                                <div className={styles.pricingCard}>
-                                    <div className={styles.pricingHeader}><h3>Implementação</h3></div>
-                                    <div className={styles.pricingValue}>{formatCurrency(proposal.price_total)}</div>
-                                    <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>pagamento único</div>
-                                    <div className={styles.pricingIncluded}>
-                                        <ul>
-                                            {(proposal.implementation_features || ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias']).map((item, i) => (
-                                                <li key={i}>{item}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
+                                    </RevealSection>
                                 </div>
-                                {proposal.has_maintenance && (
-                                    <div className={`${styles.pricingCard} ${styles.maintenanceCard}`}>
-                                        <div className={styles.pricingHeader}><h3>Mensalidade</h3></div>
-                                        <div className={styles.pricingValue}>{formatCurrency(proposal.maintenance_price)}</div>
-                                        <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>por mês</div>
-                                        <div className={styles.pricingIncluded}>
-                                            <ul>
-                                                {(proposal.maintenance_features || ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais']).map((item, i) => (
-                                                    <li key={i}>{item}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
-                        </RevealSection>
-                    </div>
-                </div>
+                        );
+                    }
 
-                {/* SLIDE 9: CTA */}
-                <div className={`${slideStyles.slide} ${currentSlide === 8 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
-                    <div className={slideStyles.slideContent} style={{ textAlign: 'center' }}>
-                        <RevealSection isActive={currentSlide === 8}>
-                            <h2 style={{ fontSize: '4.5rem', fontWeight: '900', marginBottom: '2rem', lineHeight: '1.1' }}>Vamos transformar seus resultados?</h2>
-                            <p style={{ fontSize: '1.5rem', color: 'var(--brand-muted)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>
-                                Esta proposta está alinhada com os objetivos da <strong style={{ color: 'white' }}>{proposal.company_name}</strong>?
-                            </p>
-                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                                <a
-                                    href={`https://wa.me/?text=Olá! Gostei da proposta para ${proposal.company_name}, vamos fechar?`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.ctaButton}
-                                >
-                                    Aceitar Proposta Agora
-                                </a>
+                    if (slideId === 'roadmap') {
+                        return (
+                            <div key="roadmap" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive} className={styles.roadmapSection}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Cronograma</span>
+                                            <h2>Plano de Entrega</h2>
+                                        </div>
+                                        {(() => {
+                                            const totalDays = (parseInt(proposal.roadmap_analysis_days) || 7) +
+                                                (parseInt(proposal.roadmap_approval_days) || 7) +
+                                                (parseInt(proposal.roadmap_development_days) || 21) +
+                                                (parseInt(proposal.roadmap_testing_days) || 14);
+                                            const totalWeeks = Math.ceil(totalDays / 7);
+
+                                            return (
+                                                <>
+                                                    <div className={styles.roadmapContainer}>
+                                                        <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', marginBottom: '20px', color: 'var(--brand-muted)', fontSize: '0.8rem' }}>
+                                                            <div></div>
+                                                            {Array.from({ length: totalWeeks }).map((_, i) => (
+                                                                <div key={i}>Sem {i + 1}</div>
+                                                            ))}
+                                                        </div>
+                                                        <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Análise</div>
+                                                            <div className={styles.roadmapBar} style={{ gridColumn: `2 / 3`, background: 'var(--brand-neon)', height: '10px', borderRadius: '5px' }}></div>
+                                                        </div>
+                                                        <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Setup</div>
+                                                            <div className={styles.roadmapBar} style={{ gridColumn: `2 / ${Math.max(3, Math.ceil(totalWeeks * 0.6))}`, background: 'var(--brand-neon)', opacity: 0.7, height: '10px', borderRadius: '5px' }}></div>
+                                                        </div>
+                                                        <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Testes</div>
+                                                            <div className={styles.roadmapBar} style={{ gridColumn: `${Math.ceil(totalWeeks * 0.6)} / ${totalWeeks}`, background: 'var(--brand-neon)', opacity: 0.4, height: '10px', borderRadius: '5px' }}></div>
+                                                        </div>
+                                                        <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Go-Live</div>
+                                                            <div className={styles.roadmapBar} style={{ gridColumn: `${totalWeeks} / ${totalWeeks + 1}`, background: 'var(--brand-neon)', height: '10px', borderRadius: '5px' }}></div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '1.2rem', color: 'var(--brand-muted)' }}>Prazo estimado: <strong style={{ color: 'var(--brand-neon)' }}>{totalDays} dias</strong> para operação total.</span>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </RevealSection>
+                                </div>
                             </div>
-                            <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
-                                <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.payment_method] || 'PIX'}</p>
+                        );
+                    }
+
+                    if (slideId === 'pricing') {
+                        return (
+                            <div key="pricing" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive} className={styles.pricingSection}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Investimento</span>
+                                            <h2>Condições Especiais</h2>
+                                        </div>
+                                        <div className={styles.pricingGrid}>
+                                            <div className={styles.pricingCard}>
+                                                <div className={styles.pricingHeader}><h3>Implementação</h3></div>
+                                                <div className={styles.pricingValue}>{formatCurrency(proposal.price_total)}</div>
+                                                <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>pagamento único</div>
+                                                <div className={styles.pricingIncluded}>
+                                                    <ul>
+                                                        {(proposal.implementation_features || ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias']).map((item, i) => (
+                                                            <li key={i}>{item}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            {proposal.has_maintenance && (
+                                                <div className={`${styles.pricingCard} ${styles.maintenanceCard}`}>
+                                                    <div className={styles.pricingHeader}><h3>Mensalidade</h3></div>
+                                                    <div className={styles.pricingValue}>{formatCurrency(proposal.maintenance_price)}</div>
+                                                    <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>por mês</div>
+                                                    <div className={styles.pricingIncluded}>
+                                                        <ul>
+                                                            {(proposal.maintenance_features || ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais']).map((item, i) => (
+                                                                <li key={i}>{item}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </RevealSection>
+                                </div>
                             </div>
-                        </RevealSection>
-                    </div>
-                </div>
+                        );
+                    }
+
+                    if (slideId === 'llm') {
+                        return (
+                            <div key="llm" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                                <div className={slideStyles.slideContent}>
+                                    <RevealSection isActive={isActive}>
+                                        <div className={styles.sectionHeader}>
+                                            <span className={styles.sectionTag}>Consumo de IA</span>
+                                            <h2>Custos de LLM (OpenAI)</h2>
+                                            <p className={styles.sectionSubtitle}>Valores variáveis baseados em consumo real</p>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginTop: '40px' }}>
+                                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '30px', borderRadius: '20px', textAlign: 'center' }}>
+                                                <span style={{ color: 'var(--brand-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '10px' }}>Custo por Conversa</span>
+                                                <strong style={{ fontSize: '2.5rem', color: 'white' }}>{formatCurrency(proposal.cost_per_conversation)}</strong>
+                                            </div>
+                                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '30px', borderRadius: '20px', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                                <span style={{ color: 'var(--brand-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '10px' }}>Estimativa Mensal</span>
+                                                <strong style={{ fontSize: '2.5rem', color: 'var(--brand-neon)' }}>{formatCurrency(proposal.estimated_monthly_cost)}*</strong>
+                                            </div>
+                                        </div>
+                                        <p style={{ color: 'var(--brand-muted)', fontSize: '0.85rem', marginTop: '30px', textAlign: 'center', maxWidth: '600px', margin: '30px auto 0' }}>
+                                            * Esta é uma estimativa baseada no seu volume atual de leads. O pagamento é feito diretamente para a OpenAI via cartão de crédito ou créditos pré-pagos.
+                                        </p>
+                                    </RevealSection>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (slideId === 'cta') {
+                        return (
+                            <div key="cta" className={`${slideStyles.slide} ${isActive ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                                <div className={slideStyles.slideContent} style={{ textAlign: 'center' }}>
+                                    <RevealSection isActive={isActive}>
+                                        <h2 style={{ fontSize: '4.5rem', fontWeight: '900', marginBottom: '2rem', lineHeight: '1.1' }}>Vamos transformar seus resultados?</h2>
+                                        <p style={{ fontSize: '1.5rem', color: 'var(--brand-muted)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>
+                                            Esta proposta está alinhada com os objetivos da <strong style={{ color: 'white' }}>{proposal.company_name}</strong>?
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                                            <a
+                                                href={`https://wa.me/?text=Olá! Acabei de ver a proposta para a ${proposal.company_name} e gostaria de prosseguir.`}
+                                                className={styles.ctaButton}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Falar com Consultor
+                                            </a>
+                                            <button className={styles.ctaButtonSecondary} onClick={() => window.print()}>
+                                                Baixar PDF
+                                            </button>
+                                        </div>
+                                        <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
+                                            <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.payment_method] || 'PIX'}</p>
+                                        </div>
+                                    </RevealSection>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return null;
+                })}
             </div>
         </div>
     );
