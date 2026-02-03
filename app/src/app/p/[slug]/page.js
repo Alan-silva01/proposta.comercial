@@ -87,8 +87,8 @@ function AnimatedCounter({ value, duration = 1500, prefix = '', isActive }) {
     const formatted = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(displayValue);
 
     return <span>{prefix}{formatted}</span>;
@@ -405,8 +405,13 @@ export default function ProposalPage() {
     const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, slidesCount - 1));
     const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 0));
 
-    function formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0);
+    function formatCurrency(value, decimals = 0) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }).format(value || 0);
     }
 
     function formatPercent(value) {
@@ -835,11 +840,11 @@ export default function ProposalPage() {
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginTop: '40px' }}>
                                             <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '30px', borderRadius: '20px', textAlign: 'center' }}>
                                                 <span style={{ color: 'var(--brand-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '10px' }}>Custo por Conversa</span>
-                                                <strong style={{ fontSize: '2.5rem', color: 'white' }}>{formatCurrency(proposal.cost_per_conversation)}</strong>
+                                                <strong style={{ fontSize: '2.5rem', color: 'white' }}>{formatCurrency(proposal.cost_per_conversation, 2)}</strong>
                                             </div>
                                             <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '30px', borderRadius: '20px', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                                 <span style={{ color: 'var(--brand-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '10px' }}>Estimativa Mensal</span>
-                                                <strong style={{ fontSize: '2.5rem', color: 'var(--brand-neon)' }}>{formatCurrency(proposal.estimated_monthly_cost)}*</strong>
+                                                <strong style={{ fontSize: '2.5rem', color: 'var(--brand-neon)' }}>{formatCurrency(proposal.estimated_monthly_cost, 2)}*</strong>
                                             </div>
                                         </div>
                                         <p style={{ color: 'var(--brand-muted)', fontSize: '0.85rem', marginTop: '30px', textAlign: 'center', maxWidth: '600px', margin: '30px auto 0' }}>
@@ -871,7 +876,7 @@ export default function ProposalPage() {
                                             </a>
                                         </div>
                                         <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
-                                            <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.payment_method] || 'PIX'}</p>
+                                            <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.implementation_payment_method] || 'PIX'}</p>
                                         </div>
                                     </RevealSection>
                                 </div>
