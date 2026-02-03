@@ -84,8 +84,8 @@
     top: 50%;
     transform: translateY(-50%);
     background: rgba(13, 15, 13, 0.4);
-    border: 1px solid rgba(191, 255, 0, 0.1);
-    color: rgba(191, 255, 0, 0.6);
+    border: 1px solid rgba(191, 255, 0, 0.2);
+    color: var(--brand-neon);
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -98,6 +98,22 @@
     pointer-events: auto;
     z-index: 150;
     font-size: 1rem;
+    animation: pulsateArrow 2s infinite ease-in-out;
+}
+
+@keyframes pulsateArrow {
+
+    0%,
+    100% {
+        transform: translateY(-50%) scale(1);
+        box-shadow: 0 0 0 rgba(191, 255, 0, 0);
+    }
+
+    50% {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 0 15px rgba(191, 255, 0, 0.3);
+        border-color: rgba(191, 255, 0, 0.6);
+    }
 }
 
 .navButton:hover:not(:disabled) {
