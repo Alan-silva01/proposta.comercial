@@ -532,18 +532,21 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 24px;
-    padding: 40px;
+    padding: 60px 40px;
     height: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     position: relative;
+    overflow-y: auto;
 }
 
 .diagnosisTextContent {
-    font-size: 1.4rem;
-    line-height: 1.6;
+    font-size: 1.25rem;
+    line-height: 1.8;
     color: var(--brand-light);
-    font-weight: 500;
+    font-weight: 400;
+    white-space: pre-wrap;
+    width: 100%;
 }
 
 @media (max-width: 1024px) {
