@@ -513,9 +513,13 @@ export default function ProposalPage() {
                                 <div className={styles.revenueVS}>VS</div>
 
                                 <div className={styles.revenueCol} style={{ border: '1px solid var(--brand-neon)' }}>
-                                    <span className={styles.revenueColTag} style={{ color: 'var(--brand-neon)' }}>Com Nossa IA</span>
+                                    <span className={styles.revenueColTag} style={{ color: 'var(--brand-neon)' }}>Nossa Solução</span>
                                     <div className={styles.revenueMainValue}>{formatCurrency(roi?.projectedRevenue)}</div>
-                                    <div className={styles.revenueSubDetail}>Nova Conversão: {formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}</div>
+                                    <div className={styles.revenueSubDetail}>
+                                        Nova Conversão: {roi?.projectedLeadsResponded > 0
+                                            ? formatPercent((roi.projectedConverted / roi.projectedLeadsResponded) * 100)
+                                            : formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}
+                                    </div>
                                     <div className={styles.revenueSubDetail}>Atendimento {conservative ? 'Conservador' : '24/7 Total'}</div>
                                 </div>
                             </div>
