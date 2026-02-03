@@ -165,6 +165,52 @@ export default function EditProposalPage() {
         }));
     }
 
+    // Funções para Comparativo Com/Sem IA
+    function updateComparisonItem(field, index, value) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: prev[field].map((item, i) => i === index ? value : item),
+        }));
+    }
+
+    function addComparisonItem(field) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: [...prev[field], ''],
+        }));
+    }
+
+    function removeComparisonItem(field, index) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: prev[field].filter((_, i) => i !== index),
+        }));
+    }
+
+    // Funções para Market Stats
+    function updateMarketStat(index, field, value) {
+        setFormData(prev => ({
+            ...prev,
+            market_stats: prev.market_stats.map((stat, i) =>
+                i === index ? { ...stat, [field]: value } : stat
+            ),
+        }));
+    }
+
+    function addMarketStat() {
+        setFormData(prev => ({
+            ...prev,
+            market_stats: [...prev.market_stats, { text: '', highlight: '' }],
+        }));
+    }
+
+    function removeMarketStat(index) {
+        setFormData(prev => ({
+            ...prev,
+            market_stats: prev.market_stats.filter((_, i) => i !== index),
+        }));
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setSaving(true);
@@ -643,6 +689,121 @@ export default function EditProposalPage() {
                                     + Adicionar gargalo personalizado
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Comparativo Com IA vs Sem IA */}
+                        <div className="form-group" style={{ marginTop: 'var(--space-6)' }}>
+                            <label className="label">Comparativo: Com Agente de IA</label>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                Liste os benefícios de ter IA (aparece no lado verde)
+                            </p>
+                            {formData.comparison_with_ai.map((item, index) => (
+                                <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={item}
+                                        onChange={(e) => updateComparisonItem('comparison_with_ai', index, e.target.value)}
+                                        placeholder="Ex: Responde em segundos"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeComparisonItem('comparison_with_ai', index)}
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0 var(--space-3)' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addComparisonItem('comparison_with_ai')}
+                                className="btn btn-secondary"
+                                style={{ marginTop: 'var(--space-2)' }}
+                            >
+                                + Adicionar item
+                            </button>
+                        </div>
+
+                        <div className="form-group" style={{ marginTop: 'var(--space-4)' }}>
+                            <label className="label">Comparativo: Sem Agente de IA</label>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                Liste os problemas de não ter IA (aparece no lado vermelho)
+                            </p>
+                            {formData.comparison_without_ai.map((item, index) => (
+                                <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={item}
+                                        onChange={(e) => updateComparisonItem('comparison_without_ai', index, e.target.value)}
+                                        placeholder="Ex: Demora 1h ou mais"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeComparisonItem('comparison_without_ai', index)}
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0 var(--space-3)' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addComparisonItem('comparison_without_ai')}
+                                className="btn btn-secondary"
+                                style={{ marginTop: 'var(--space-2)' }}
+                            >
+                                + Adicionar item
+                            </button>
+                        </div>
+
+                        {/* Dados de Mercado */}
+                        <div className="form-group" style={{ marginTop: 'var(--space-6)' }}>
+                            <label className="label">Dados de Mercado</label>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                Estatísticas para convencer o cliente (texto + destaque em verde)
+                            </p>
+                            {formData.market_stats.map((stat, index) => (
+                                <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)', alignItems: 'center' }}>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={stat.text || ''}
+                                        onChange={(e) => updateMarketStat(index, 'text', e.target.value)}
+                                        placeholder="Ex: Responder em até 1 minuto pode gerar até"
+                                        style={{ flex: 2 }}
+                                    />
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={stat.highlight || ''}
+                                        onChange={(e) => updateMarketStat(index, 'highlight', e.target.value)}
+                                        placeholder="391% mais vendas"
+                                        style={{ flex: 1, color: 'var(--brand-accent)' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeMarketStat(index)}
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0 var(--space-3)' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addMarketStat()}
+                                className="btn btn-secondary"
+                                style={{ marginTop: 'var(--space-2)' }}
+                            >
+                                + Adicionar estatística
+                            </button>
                         </div>
                     </div>
 
