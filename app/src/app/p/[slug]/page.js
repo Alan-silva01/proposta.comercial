@@ -520,7 +520,7 @@ export default function ProposalPage() {
                                             ? formatPercent((roi.projectedConverted / roi.projectedLeadsResponded) * 100)
                                             : formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}
                                     </div>
-                                    <div className={styles.revenueSubDetail}>Atendimento {conservative ? 'Conservador' : '24/7 Total'}</div>
+                                    <div className={styles.revenueSubDetail}>{proposal.leads_received} leads/mês</div>
                                 </div>
                             </div>
 
@@ -578,6 +578,30 @@ export default function ProposalPage() {
                                         <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.revenueIncrease * 12)}</span>
                                     </ScratchCard>
                                 </div>
+                            </div>
+
+                            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                <button
+                                    onClick={() => setConservative(!conservative)}
+                                    className={styles.conservativeToggle}
+                                    style={{
+                                        background: conservative ? 'var(--brand-neon)' : 'transparent',
+                                        color: conservative ? 'black' : 'var(--brand-neon)',
+                                        border: '1px solid var(--brand-neon)',
+                                        padding: '12px 24px',
+                                        borderRadius: '30px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
+                                </button>
+                                <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--brand-muted)' }}>
+                                    {conservative
+                                        ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
+                                        : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
+                                </p>
                             </div>
                         </RevealSection>
                     </div>
