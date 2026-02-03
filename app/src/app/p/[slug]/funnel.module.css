@@ -1,7 +1,7 @@
 /* Interactive Funnel Comparison */
 .funnelComparisonSection {
-    background: #FFFFFF;
-    padding: var(--space-16) 0;
+    background: transparent;
+    padding: var(--space-4) 0;
 }
 
 .funnelGrid {
@@ -23,35 +23,16 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    /* Anchor for absolute positioning of overlay */
 }
 
 .funnelTitle {
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
+    font-size: 1.5rem;
+    font-weight: 700;
     margin-bottom: var(--space-8);
-    color: var(--text-primary);
+    color: var(--brand-light);
     text-align: center;
-    position: relative;
-    z-index: 5;
-    /* Keep title above wreckage */
-}
-
-/* ... existing styles ... */
-
-/* Destroyed State */
-.wreckageOverlay {
-    position: absolute;
-    top: 60%;
-    /* Adjusted to center over where the funnel body was */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    opacity: 0;
-    transition: opacity 1s ease;
-    z-index: 20;
-    pointer-events: none;
-    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .funnelContainer {
@@ -62,7 +43,6 @@
     max-width: 400px;
     position: relative;
     gap: 4px;
-    /* Space between layers */
 }
 
 .funnelLayer {
@@ -71,7 +51,6 @@
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     opacity: 0.3;
-    /* Hidden state */
     transform: translateY(10px);
     filter: grayscale(1);
 }
@@ -99,8 +78,6 @@
 
 .funnelLayer:nth-child(1) .funnelShape {
     width: 100%;
-    background: #FFD700;
-    /* Example Color: Consciousness */
     background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
     z-index: 4;
 }
@@ -108,8 +85,6 @@
 .funnelLayer:nth-child(2) .funnelShape {
     width: 85%;
     margin: 0 auto;
-    background: #FF007A;
-    /* Example Color: Knowledge */
     background: linear-gradient(135deg, #FF007A 0%, #D60064 100%);
     z-index: 3;
 }
@@ -117,8 +92,6 @@
 .funnelLayer:nth-child(3) .funnelShape {
     width: 70%;
     margin: 0 auto;
-    background: #00A3FF;
-    /* Example Color: Consideration */
     background: linear-gradient(135deg, #00A3FF 0%, #0077B6 100%);
     z-index: 2;
 }
@@ -126,51 +99,27 @@
 .funnelLayer:nth-child(4) .funnelShape {
     width: 55%;
     margin: 0 auto;
-    background: #9D00FF;
-    /* Example Color: Decision/Sales */
     background: linear-gradient(135deg, #9D00FF 0%, #7B00C7 100%);
     z-index: 1;
     clip-path: polygon(0 0, 100% 0, 70% 100%, 30% 100%);
-    /* Sharper bottom */
 }
 
-/* Specific colors for 'With AI' side - Green/Blue/Purple Success Theme */
-.funnelColumn.ai .funnelLayer:nth-child(1) .funnelShape {
-    width: 100%;
-    background: linear-gradient(135deg, #00C853 0%, #009624 100%);
-    /* Green - Consciousness */
-    opacity: 1;
-    z-index: 4;
+/* AI Side specific successes - Keeping new colors */
+.ai .funnelLayer:nth-child(1) .funnelShape {
+    background: linear-gradient(135deg, #BFFF00 0%, #6A8E00 100%);
 }
 
-.funnelColumn.ai .funnelLayer:nth-child(2) .funnelShape {
-    width: 85%;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #00B0FF 0%, #0091EA 100%);
-    /* Light Blue - Knowledge */
-    opacity: 1;
-    z-index: 3;
+.ai .funnelLayer:nth-child(2) .funnelShape {
+    background: linear-gradient(135deg, #00FFCC 0%, #008E72 100%);
 }
 
-.funnelColumn.ai .funnelLayer:nth-child(3) .funnelShape {
-    width: 70%;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #2962FF 0%, #0039CB 100%);
-    /* Deep Blue - Consideration */
-    opacity: 1;
-    z-index: 2;
+.ai .funnelLayer:nth-child(3) .funnelShape {
+    background: linear-gradient(135deg, #00B0FF 0%, #004D86 100%);
 }
 
-.funnelColumn.ai .funnelLayer:nth-child(4) .funnelShape {
-    width: 55%;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #6200EA 0%, #311B92 100%);
-    /* Purple - Decision/Sales */
-    opacity: 1;
-    z-index: 1;
-    clip-path: polygon(0 0, 100% 0, 70% 100%, 30% 100%);
+.ai .funnelLayer:nth-child(4) .funnelShape {
+    background: linear-gradient(135deg, #FFFFFF 0%, #B8B8B8 100%);
 }
-
 
 .funnelContent {
     position: absolute;
@@ -190,20 +139,53 @@
     opacity: 1;
 }
 
-/* Collapse Animation - Physics based */
+.funnelValue {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1.1;
+}
+
+.funnelLabel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.funnelMetric {
+    position: absolute;
+    right: -130px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--brand-dark-3);
+    color: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease 0.2s;
+}
+
+@media (max-width: 1000px) {
+    .funnelMetric {
+        display: none;
+    }
+}
+
+.funnelLayer.visible .funnelMetric {
+    opacity: 1;
+}
+
+/* Physics Debris */
 @keyframes crumble {
     0% {
         transform: translateY(0) rotate(0);
-        opacity: 1;
-    }
-
-    20% {
-        transform: translateY(0) rotate(-5deg);
-        opacity: 1;
-    }
-
-    40% {
-        transform: translateY(50px) rotate(10deg);
         opacity: 1;
     }
 
@@ -213,33 +195,14 @@
     }
 }
 
-.funnelColumn.collapsing .funnelLayer {
+.collapsing .funnelLayer {
     animation: crumble 2s forwards ease-in-out;
     transform-origin: center bottom;
 }
 
-/* Stagger collapse from top to bottom - sequential falling */
-.funnelColumn.collapsing .funnelLayer:nth-child(1) {
-    animation-delay: 0s;
-}
-
-.funnelColumn.collapsing .funnelLayer:nth-child(2) {
-    animation-delay: 0.5s;
-}
-
-.funnelColumn.collapsing .funnelLayer:nth-child(3) {
-    animation-delay: 1.0s;
-}
-
-.funnelColumn.collapsing .funnelLayer:nth-child(4) {
-    animation-delay: 1.5s;
-}
-
-/* Destroyed State */
 .wreckageOverlay {
     position: absolute;
     top: 50%;
-    /* Center vertically in the container */
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
@@ -250,13 +213,12 @@
     width: 100%;
 }
 
-.funnelColumn.destroyed .funnelContainer {
+.destroyed .funnelContainer {
     opacity: 0;
-    /* Hide debris after animation */
     transition: opacity 0.5s ease;
 }
 
-.funnelColumn.destroyed .wreckageOverlay {
+.destroyed .wreckageOverlay {
     opacity: 1;
     animation: stamp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -280,77 +242,8 @@
 
 .wreckageIcon {
     font-size: 120px;
-    /* Larger X */
     color: #DC2626;
     display: block;
     line-height: 1;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
-}
-
-.funnelValue {
-    font-size: var(--text-lg);
-    font-weight: var(--font-bold);
-    display: block;
-    line-height: 1.1;
-}
-
-.funnelLabel {
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    opacity: 0.9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.funnelMetric {
-    position: absolute;
-    right: -140px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #FFFFFF;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: var(--text-sm);
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    color: var(--text-primary);
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s ease 0.2s;
-}
-
-.funnelLayer.visible .funnelMetric {
-    opacity: 1;
-}
-
-.funnelMetric::before {
-    content: '';
-    position: absolute;
-    left: -20px;
-    top: 50%;
-    width: 20px;
-    height: 1px;
-    background: #E5E7EB;
-}
-
-.clickInstruction {
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-3px);
-    }
 }

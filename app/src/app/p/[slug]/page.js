@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase, calculateROI } from '@/lib/supabase';
 import styles from './proposal.module.css';
+import slideStyles from './slides.module.css';
 import funnelStyles from './funnel.module.css';
 import scratchStyles from './scratch.module.css';
 import confetti from 'canvas-confetti';
@@ -28,100 +29,38 @@ const PAYMENT_METHODS = {
     'debito_auto': 'Débito Automático',
 };
 
-// Reveal Animation Wrapper
-function RevealSection({ children, className = '', threshold = 0.1 }) {
-    const sectionRef = useRef(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                }
-            },
-            { threshold: threshold }
-        );
-
-        if (sectionRef.current) {
-            observer.observe(sectionRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [threshold]);
-
+// Reveal Animation Wrapper - Adapted for Slides (triggers on slide active)
+function RevealSection({ children, className = '', isActive = false }) {
+    // In slide mode, we just use the active state to trigger animations
     return (
         <section
-            ref={sectionRef}
-            className={`${className} ${isVisible ? styles.revealActive : ''}`}
+            className={`${className} ${isActive ? styles.revealActive : ''}`}
         >
             {children}
         </section>
     );
 }
 
-// Animated Counter Component - Casino Style (fast count up/down)
-function AnimatedCounter({ value, duration = 1500, prefix = '' }) {
+// Animated Counter Component
+function AnimatedCounter({ value, duration = 1500, prefix = '', isActive }) {
     const [displayValue, setDisplayValue] = useState(0);
     const [hasAnimated, setHasAnimated] = useState(false);
-    const lastValueRef = useRef(0);
     const animationRef = useRef(null);
-    const ref = useRef(null);
 
     useEffect(() => {
-        if (!ref.current) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const entry = entries[0];
-                if (entry.isIntersecting && value > 0 && !hasAnimated) {
-                    setHasAnimated(true);
-                    startAnimation(0, value);
-                    lastValueRef.current = value;
-                }
-            },
-            { threshold: 0.2 }
-        );
-
-        observer.observe(ref.current);
-        return () => observer.disconnect();
-    }, [value, hasAnimated]);
-
-    // Check visibility on mount with value
-    useEffect(() => {
-        if (!ref.current || hasAnimated || value <= 0) return;
-
-        const rect = ref.current.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
-
-        if (isVisible) {
+        if (isActive && value > 0 && !hasAnimated) {
             setHasAnimated(true);
             startAnimation(0, value);
-            lastValueRef.current = value;
         }
-    }, [value, hasAnimated]);
-
-    // Re-animate when value changes (toggle conservative mode)
-    useEffect(() => {
-        if (hasAnimated && value !== lastValueRef.current && value > 0) {
-            startAnimation(lastValueRef.current, value);
-            lastValueRef.current = value;
-        }
-    }, [value, hasAnimated]);
+    }, [isActive, value, hasAnimated]);
 
     function startAnimation(from, to) {
-        // Cancel any ongoing animation
-        if (animationRef.current) {
-            cancelAnimationFrame(animationRef.current);
-        }
-
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
         const start = performance.now();
 
         function tick(now) {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
-
-            // Casino-style exponential ease-out
             const eased = 1 - Math.pow(1 - progress, 4);
             const current = Math.floor(from + (to - from) * eased);
             setDisplayValue(current);
@@ -132,7 +71,6 @@ function AnimatedCounter({ value, duration = 1500, prefix = '' }) {
                 setDisplayValue(to);
             }
         }
-
         animationRef.current = requestAnimationFrame(tick);
     }
 
@@ -143,15 +81,24 @@ function AnimatedCounter({ value, duration = 1500, prefix = '' }) {
         maximumFractionDigits: 0,
     }).format(displayValue);
 
-    return <span ref={ref}>{prefix}{formatted}</span>;
+    return <span>{prefix}{formatted}</span>;
 }
 
 // Typewriter Effect Component
-function TypewrittenText({ text, speed = 80, delay = 500 }) {
+function TypewrittenText({ text, speed = 80, delay = 500, isActive }) {
     const [displayedText, setDisplayedText] = useState('');
     const [isComplete, setIsComplete] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
 
     useEffect(() => {
+        if (isActive && !hasStarted) {
+            setHasStarted(true);
+        }
+    }, [isActive, hasStarted]);
+
+    useEffect(() => {
+        if (!hasStarted) return;
+
         let timeout;
         if (displayedText.length < text.length) {
             timeout = setTimeout(() => {
@@ -161,26 +108,24 @@ function TypewrittenText({ text, speed = 80, delay = 500 }) {
             setIsComplete(true);
         }
         return () => clearTimeout(timeout);
-    }, [displayedText, text, speed, delay]);
+    }, [displayedText, text, speed, delay, hasStarted]);
 
     return (
         <span className={styles.typewriterWrapper}>
             {displayedText}
-            <span className={`${styles.cursor} ${isComplete ? styles.cursorHidden : ''}`}>|</span>
+            <span className={`${styles.cursor} ${isComplete ? styles.cursorHidden : ''}`}></span>
         </span>
     );
 }
 
-
 // Interactive Funnel Component
-function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
+function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActive }) {
     const [visibleToday, setVisibleToday] = useState(0);
     const [visibleAI, setVisibleAI] = useState(0);
-    const [funnelState, setFunnelState] = useState('normal'); // 'normal', 'collapsing', 'destroyed'
+    const [funnelState, setFunnelState] = useState('normal');
 
     const isScheduling = proposal.funnel_type === 'scheduling';
 
-    // Define layers for Today
     const layersToday = [
         { label: 'Leads', value: proposal.leads_received, metric: '100%' },
         { label: 'Respondidos', value: proposal.leads_responded, metric: formatPercent((proposal.leads_responded / proposal.leads_received) * 100) },
@@ -188,9 +133,7 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
         { label: 'Vendas', value: proposal.leads_converted, metric: formatPercent((proposal.leads_converted / proposal.leads_received) * 100) }
     ];
 
-    // Define layers for With AI
     const projectedResponded = Math.round(proposal.leads_received * (proposal.projected_response_rate / 100));
-    // Use projected_conversion_rate for scheduling (not hardcoded 60%)
     const schedulingConversionRate = proposal.projected_conversion_rate || 20;
     const projectedScheduled = isScheduling ? Math.round(projectedResponded * (schedulingConversionRate / 100)) : 0;
     const projectedSales = roi?.projectedConverted || 0;
@@ -202,6 +145,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
         { label: 'Vendas', value: projectedSales, metric: formatPercent((projectedSales / proposal.leads_received) * 100) }
     ];
 
+    useEffect(() => {
+        if (!isActive) {
+            setVisibleToday(0);
+            setVisibleAI(0);
+            setFunnelState('normal');
+        }
+    }, [isActive]);
+
     const handleTodayClick = () => {
         if (visibleToday < layersToday.length) setVisibleToday(prev => prev + 1);
     };
@@ -210,27 +161,19 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
         if (visibleAI < layersAI.length) setVisibleAI(prev => prev + 1);
     };
 
-    // Trigger collapse when AI funnel is fully revealed AND user clicks
     useEffect(() => {
         if (visibleAI === layersAI.length && funnelState === 'normal') {
             const handleClick = () => {
                 setFunnelState('collapsing');
-
-                // After animation completes (Last item delay 1.5s + Duration 2s = 3.5s)
-                setTimeout(() => {
-                    setFunnelState('destroyed');
-                }, 3500);
+                setTimeout(() => setFunnelState('destroyed'), 3500);
             };
-
-            // Add click listener to document
             document.addEventListener('click', handleClick, { once: true });
-
             return () => document.removeEventListener('click', handleClick);
         }
     }, [visibleAI, layersAI.length, funnelState]);
 
     return (
-        <RevealSection className={funnelStyles.funnelComparisonSection}>
+        <RevealSection className={funnelStyles.funnelComparisonSection} isActive={isActive}>
             <div className={styles.sectionHeader}>
                 <span className={styles.sectionTag}>Comparativo Visual</span>
                 <h2>Funil de Conversão</h2>
@@ -238,21 +181,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
             </div>
 
             <div className={funnelStyles.funnelGrid}>
-                {/* Column Today */}
                 <div className={`${funnelStyles.funnelColumn} ${funnelStyles[funnelState]}`}>
                     <h3 className={funnelStyles.funnelTitle}>Hoje</h3>
                     {funnelState === 'destroyed' && (
-                        <div className={funnelStyles.wreckageOverlay}>
-                            <span className={funnelStyles.wreckageIcon}>❌</span>
-                        </div>
+                        <div className={funnelStyles.wreckageOverlay}><span className={funnelStyles.wreckageIcon}>❌</span></div>
                     )}
                     <div className={funnelStyles.funnelContainer} onClick={handleTodayClick}>
                         {layersToday.map((layer, index) => (
-                            <div
-                                key={index}
-                                className={`${funnelStyles.funnelLayer} ${index < visibleToday ? funnelStyles.visible : ''}`}
-                                style={{ zIndex: layersToday.length - index }}
-                            >
+                            <div key={index} className={`${funnelStyles.funnelLayer} ${index < visibleToday ? funnelStyles.visible : ''}`} style={{ zIndex: layersToday.length - index }}>
                                 <div className={funnelStyles.funnelShape}>
                                     <div className={funnelStyles.funnelContent}>
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
@@ -262,20 +198,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
                                 </div>
                             </div>
                         ))}
-
                     </div>
                 </div>
 
-                {/* Column With AI */}
                 <div className={`${funnelStyles.funnelColumn} ${funnelStyles.ai}`}>
                     <h3 className={funnelStyles.funnelTitle}>Com IA</h3>
                     <div className={funnelStyles.funnelContainer} onClick={handleAIClick}>
                         {layersAI.map((layer, index) => (
-                            <div
-                                key={index}
-                                className={`${funnelStyles.funnelLayer} ${index < visibleAI ? funnelStyles.visible : ''}`}
-                                style={{ zIndex: layersAI.length - index }}
-                            >
+                            <div key={index} className={`${funnelStyles.funnelLayer} ${index < visibleAI ? funnelStyles.visible : ''}`} style={{ zIndex: layersAI.length - index }}>
                                 <div className={funnelStyles.funnelShape}>
                                     <div className={funnelStyles.funnelContent}>
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
@@ -285,7 +215,6 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
                                 </div>
                             </div>
                         ))}
-
                     </div>
                 </div>
             </div>
@@ -293,9 +222,8 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent }) {
     );
 }
 
-
 // Scratch Card Component
-function ScratchCard({ children, width = 300, height = 200, onReveal }) {
+function ScratchCard({ children, onReveal }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const [isRevealed, setIsRevealed] = useState(false);
@@ -306,24 +234,21 @@ function ScratchCard({ children, width = 300, height = 200, onReveal }) {
         const ctx = canvas.getContext('2d');
         const container = containerRef.current;
 
-        // Set canvas size to match container
         canvas.width = container.offsetWidth;
         canvas.height = container.offsetHeight;
 
-        // Fill with silver gradient
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, '#E0E0E0');
-        gradient.addColorStop(0.5, '#F5F5F5');
-        gradient.addColorStop(1, '#E0E0E0');
+        gradient.addColorStop(0, '#121212');
+        gradient.addColorStop(0.5, '#1E1E1E');
+        gradient.addColorStop(1, '#121212');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Add "Raspe Aqui" text directly to canvas
-        ctx.fillStyle = '#999999';
+        ctx.fillStyle = '#BFFF00';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText("RASPE AQUI", canvas.width / 2, canvas.height / 2);
+        ctx.fillText("RASPE O RESULTADO", canvas.width / 2, canvas.height / 2);
 
         ctx.globalCompositeOperation = 'destination-out';
     }, []);
@@ -333,91 +258,38 @@ function ScratchCard({ children, width = 300, height = 200, onReveal }) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.clientX || e.touches[0].clientX;
         const clientY = e.clientY || e.touches[0].clientY;
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+        return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
     const scratch = (x, y) => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-
+        const ctx = canvasRef.current.getContext('2d');
         ctx.beginPath();
-        ctx.arc(x, y, 35, 0, 2 * Math.PI); // Tuned brush size
+        ctx.arc(x, y, 35, 0, 2 * Math.PI);
         ctx.fill();
-
         checkReveal();
     };
 
     const checkReveal = () => {
         if (isRevealed) return;
-
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const pixels = imageData.data;
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparentPixels = 0;
-
-        // Optimized counting (check every 10th pixel)
         for (let i = 3; i < pixels.length; i += 40) {
             if (pixels[i] === 0) transparentPixels++;
         }
-
-        const totalChecked = pixels.length / 40;
-        const percent = (transparentPixels / totalChecked) * 100;
-
-        if (percent > 50) { // Harder reveal threshold (50%)
+        if ((transparentPixels / (pixels.length / 40)) * 100 > 50) {
             setIsRevealed(true);
             canvas.style.transition = 'opacity 0.5s ease';
             canvas.style.opacity = '0';
-
-            // Fire Confetti!
-            const duration = 3000;
-            const end = Date.now() + duration;
-
+            const end = Date.now() + 3000;
             (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0, y: 0.8 }, // Bottom Left
-                    colors: ['#00C853', '#00B0FF', '#6200EA'] // Brand colors
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1, y: 0.8 }, // Bottom Right
-                    colors: ['#00C853', '#00B0FF', '#6200EA']
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#00C853', '#00B0FF', '#6200EA'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#00C853', '#00B0FF', '#6200EA'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
             }());
-
-            setTimeout(() => {
-                if (canvas) canvas.style.display = 'none';
-                if (onReveal) onReveal();
-            }, 500);
+            setTimeout(() => { if (canvas) canvas.style.display = 'none'; if (onReveal) onReveal(); }, 500);
         }
-    };
-
-    const handleMouseDown = (e) => {
-        setIsDrawing(true);
-        const { x, y } = getMousePos(e);
-        scratch(x, y);
-    };
-
-    const handleMouseMove = (e) => {
-        if (!isDrawing) return;
-        const { x, y } = getMousePos(e);
-        scratch(x, y);
-    };
-
-    const handleMouseUp = () => {
-        setIsDrawing(false);
     };
 
     return (
@@ -425,21 +297,18 @@ function ScratchCard({ children, width = 300, height = 200, onReveal }) {
             <canvas
                 ref={canvasRef}
                 className={scratchStyles.scratchCanvas}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleMouseDown}
-                onTouchMove={handleMouseMove}
-                onTouchEnd={handleMouseUp}
+                onMouseDown={(e) => { setIsDrawing(true); scratch(getMousePos(e).x, getMousePos(e).y); }}
+                onMouseMove={(e) => { if (isDrawing) scratch(getMousePos(e).x, getMousePos(e).y); }}
+                onMouseUp={() => setIsDrawing(false)}
+                onMouseLeave={() => setIsDrawing(false)}
+                onTouchStart={(e) => { setIsDrawing(true); scratch(getMousePos(e).x, getMousePos(e).y); }}
+                onTouchMove={(e) => { if (isDrawing) scratch(getMousePos(e).x, getMousePos(e).y); }}
+                onTouchEnd={() => setIsDrawing(false)}
             />
-            <div className={scratchStyles.scratchContent}>
-                {children}
-            </div>
+            <div className={scratchStyles.scratchContent}>{children}</div>
         </div>
     );
 }
-
 
 export default function ProposalPage() {
     const { slug } = useParams();
@@ -447,6 +316,9 @@ export default function ProposalPage() {
     const [loading, setLoading] = useState(true);
     const [conservative, setConservative] = useState(false);
     const [roi, setRoi] = useState(null);
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const slidesCount = 8; // Hero, Diagnosis, Solution, Funnel, ROI, Roadmap, Pricing, CTA
 
     useEffect(() => {
         fetchProposal();
@@ -454,10 +326,19 @@ export default function ProposalPage() {
 
     useEffect(() => {
         if (proposal) {
-            const calculatedRoi = calculateROI(proposal, conservative);
-            setRoi(calculatedRoi);
+            setRoi(calculateROI(proposal, conservative));
         }
     }, [proposal, conservative]);
+
+    // Keyboard Navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentSlide]);
 
     async function fetchProposal() {
         const { data, error } = await supabase
@@ -470,541 +351,276 @@ export default function ProposalPage() {
             console.error('Proposal not found:', error);
         } else {
             setProposal(data);
-
-            // Mark as viewed
             if (data.status === 'sent') {
-                await supabase
-                    .from('proposals')
-                    .update({ status: 'viewed', updated_at: new Date().toISOString() })
-                    .eq('id', data.id);
+                await supabase.from('proposals').update({ status: 'viewed', updated_at: new Date().toISOString() }).eq('id', data.id);
             }
         }
         setLoading(false);
     }
 
-    function formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(value || 0);
-    }
+    const nextSlide = () => setCurrentSlide(prev => Math.min(prev + 1, slidesCount - 1));
+    const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 0));
 
-    // For small values like cost per conversation - show 2-4 decimal places
-    function formatCurrencyDecimal(value) {
-        const num = parseFloat(value) || 0;
-        // Determine decimal places based on value size
-        const decimals = num < 1 ? 4 : num < 10 ? 2 : 0;
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            minimumFractionDigits: decimals,
-            maximumFractionDigits: decimals,
-        }).format(num);
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value || 0);
     }
 
     function formatPercent(value) {
         return `${Math.round(value || 0)}%`;
     }
 
+    if (loading) return <div className={styles.loading}><div className={styles.spinner}></div><p>Carregando proposta...</p></div>;
+    if (!proposal) return <div className={styles.error}><h1>Proposta não encontrada</h1><p>O link pode estar incorreto ou a proposta foi removida.</p></div>;
 
-
-    if (loading) {
-        return (
-            <div className={styles.loading}>
-                <div className={styles.spinner}></div>
-                <p>Carregando proposta...</p>
-            </div>
-        );
-    }
-
-    if (!proposal) {
-        return (
-            <div className={styles.error}>
-                <h1>Proposta não encontrada</h1>
-                <p>O link pode estar incorreto ou a proposta foi removida.</p>
-            </div>
-        );
-    }
-
-    const primaryColor = proposal.primary_color || '#007AFF';
     const benefits = proposal.benefits || [];
-
-    // Current conversion rate
-    const currentResponseRate = proposal.leads_received > 0
-        ? (proposal.leads_responded / proposal.leads_received) * 100
-        : 0;
-    const currentConversionRate = proposal.leads_responded > 0
-        ? (proposal.leads_converted / proposal.leads_responded) * 100
-        : 0;
+    const currentResponseRate = proposal.leads_received > 0 ? (proposal.leads_responded / proposal.leads_received) * 100 : 0;
+    const currentConversionRate = proposal.leads_responded > 0 ? (proposal.leads_converted / proposal.leads_responded) * 100 : 0;
 
     return (
-        <div className={styles.container} style={{ '--primary-color': primaryColor }}>
-            {/* Hero Section */}
-            <RevealSection className={styles.hero}>
-                {/* Background Media Layer */}
-                {proposal.hero_media && (
+        <div className={slideStyles.slidesContainer} style={{ '--primary-color': proposal.primary_color || '#BFFF00' }}>
+
+            {/* Navigation Overlay */}
+            <div className={slideStyles.controlsOverlay}>
+                <div className={slideStyles.progressDots}>
+                    {Array.from({ length: slidesCount }).map((_, i) => (
+                        <button
+                            key={i}
+                            className={`${slideStyles.dot} ${currentSlide === i ? slideStyles.active : ''}`}
+                            onClick={() => setCurrentSlide(i)}
+                            aria-label={`Ir para slide ${i + 1}`}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <button className={`${slideStyles.navButton} ${slideStyles.prevButton}`} onClick={prevSlide} disabled={currentSlide === 0}>←</button>
+            <button className={`${slideStyles.navButton} ${slideStyles.nextButton}`} onClick={nextSlide} disabled={currentSlide === slidesCount - 1}>→</button>
+
+            {/* Slides Track */}
+            <div className={slideStyles.slidesTrack} style={{ transform: `translateX(-${currentSlide * 100}vw)` }}>
+
+                {/* SLIDE 1: HERO */}
+                <div className={`${slideStyles.slide} ${currentSlide === 0 ? slideStyles.activeSlide : ''}`}>
                     <div className={styles.heroMediaBackground}>
-                        {proposal.hero_media.includes('.mp4') || proposal.hero_media.includes('.webm') || proposal.hero_media.includes('.mov') ? (
-                            <video
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                                className={styles.heroMediaVideo}
-                            >
-                                <source src={proposal.hero_media} type="video/mp4" />
-                            </video>
-                        ) : (
-                            <img
-                                src={proposal.hero_media}
-                                alt=""
-                                className={styles.heroMediaImage}
-                            />
+                        {proposal.hero_media && (
+                            proposal.hero_media.match(/\.(mp4|webm|mov)$/) ?
+                                <video autoPlay muted loop playsInline className={styles.heroMediaVideo}><source src={proposal.hero_media} /></video> :
+                                <img src={proposal.hero_media} className={styles.heroMediaImage} alt="" />
                         )}
                     </div>
-                )}
-                <div className={styles.heroContent}>
-                    <span className={styles.tag}>Proposta Comercial</span>
-                    <h1 className={styles.heroTitle}>
-                        <TypewrittenText text={proposal.company_name} />
-                    </h1>
-                    <p className={styles.heroSubtitle}>
-                        Olá, <strong>{proposal.client_name}</strong>! Preparamos uma solução
-                        de IA personalizada para transformar seu atendimento.
-                    </p>
+                    <div className={`${slideStyles.slideContent} ${styles.heroContent}`} style={{ textAlign: 'center', zIndex: 1 }}>
+                        <span className={styles.tag}>Proposta Comercial</span>
+                        <h1 className={styles.heroTitle}>
+                            <TypewrittenText text={proposal.company_name} isActive={currentSlide === 0} />
+                        </h1>
+                        <p className={styles.heroSubtitle}>
+                            Olá, <strong>{proposal.client_name}</strong>! Preparamos uma solução de IA para transformar seu atendimento.
+                        </p>
+                    </div>
                 </div>
-            </RevealSection>
 
-            {/* Com IA vs Sem IA Comparison - show if has comparison data or challenges */}
-            {((proposal.comparison_with_ai && proposal.comparison_with_ai.length > 0) ||
-                (proposal.challenges && proposal.challenges.length > 0)) && (
-                    <RevealSection className={`${styles.section} ${styles.comparisonSection}`} threshold={0.83}>
-                        <div className={styles.sectionHeader}>
-                            <span className={styles.sectionTag}>Comparativo</span>
-                            <h2>Sem IA <span className={styles.vsText}>vs</span> Com IA</h2>
-                            <p className={styles.sectionSubtitle}>no setor comercial (WhatsApp)</p>
-                        </div>
-
-                        <div className={styles.vsCards}>
-                            <div className={`${styles.vsCard} ${styles.withoutAI}`}>
-                                <h3 className={styles.vsCardTitle}>Sem Agente de IA</h3>
-                                <ul className={styles.vsList}>
-                                    {(proposal.comparison_without_ai || [
-                                        'Demora de 1h ou mais',
-                                        'Sem follow-up ou esquecido',
-                                        'Limitado à capacidade da equipe',
-                                        'Atendimento inconsistente',
-                                        'Alto custo por lead perdido',
-                                    ]).map((item, index) => (
-                                        <li key={index}><span className={styles.crossIcon}>—</span> {item}</li>
-                                    ))}
-                                </ul>
+                {/* SLIDE 2: DIAGNOSIS / CHALLENGES */}
+                <div className={`${slideStyles.slide} ${currentSlide === 1 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 1}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Diagnóstico</span>
+                                <h2>O cenário atual</h2>
+                                <p className={styles.sectionSubtitle}>Identificamos oportunidades de melhoria</p>
                             </div>
 
-                            <div className={`${styles.vsCard} ${styles.withAI}`}>
-                                <h3 className={styles.vsCardTitle}>Com Agente de IA</h3>
-                                <ul className={styles.vsList}>
-                                    {(proposal.comparison_with_ai || [
-                                        'Responde em segundos (24/7/365)',
-                                        'Faz follow-up automático',
-                                        'Atende vários leads ao mesmo tempo',
-                                        'Usa linguagem humanizada e personalizada',
-                                        'ROI de 3,5x sobre o investimento',
-                                    ]).map((item, index) => (
-                                        <li key={index}><span className={styles.checkIcon}>○</span> {item}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    </RevealSection>
-                )}
-
-            {/* Challenges Section - only show if has challenges */}
-            {proposal.challenges && proposal.challenges.length > 0 && (
-                <RevealSection className={`${styles.section} ${styles.challengesSection}`}>
-                    <div className={styles.sectionHeader}>
-                        <span className={styles.sectionTag}>Análise</span>
-                        <h2>Desafios Identificados</h2>
-                    </div>
-
-                    <div className={styles.challengesGrid}>
-                        {proposal.challenges.map((challenge, index) => (
-                            <div key={index} className={styles.challengeItem}>
-                                <span className={styles.challengeNumber}>{String(index + 1).padStart(2, '0')}</span>
-                                <span className={styles.challengeText}>{challenge}</span>
-                            </div>
-                        ))}
-                    </div>
-                </RevealSection>
-            )}
-
-            {/* Benefits Section */}
-            <RevealSection className={styles.section}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Vantagens</span>
-                    <h2>Por que IA</h2>
-                </div>
-
-                <div className={styles.benefitsGrid}>
-                    {benefits.map(benefitId => {
-                        const benefit = BENEFITS_MAP[benefitId];
-                        if (!benefit) return null;
-                        return (
-                            <div key={benefitId} className={styles.benefitCard}>
-                                <h4 className={styles.benefitTitle}>{benefit.label}</h4>
-                                <p className={styles.benefitDesc}>{benefit.desc}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </RevealSection>
-
-            {/* Market Stats Section - always show */}
-            <RevealSection className={`${styles.section} ${styles.statsSection}`}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Dados de Mercado</span>
-                    <h2>IA no WhatsApp</h2>
-                </div>
-
-                <div className={styles.marketStatsCard}>
-                    <ul className={styles.marketStatsList}>
-                        {(proposal.market_stats || [
-                            { text: 'Responder em até 1 minuto pode gerar até', highlight: '391% mais vendas' },
-                            { text: 'A cada 5 minutos sem resposta, suas chances de fechar', highlight: 'caem em 80%' },
-                            { text: 'Empresas que usam IA no atendimento', highlight: 'vendem até 3x mais' },
-                            { text: 'Follow-up automatizado aumenta em', highlight: '47% as conversões' },
-                            { text: 'Empresas com IA no atendimento', highlight: 'crescem 2x mais rápido' },
-                        ]).map((stat, index) => (
-                            <li key={index}>
-                                <span className={styles.checkIcon}>○</span>
-                                {stat.text} <strong>{stat.highlight}</strong>.
-                            </li>
-                        ))}
-                    </ul>
-                    <span className={styles.statsSource}>Fonte: SBS, MIT, HBR</span>
-                </div>
-            </RevealSection>
-
-            {/* Current State Section */}
-            <RevealSection className={styles.section}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Diagnóstico</span>
-                    <h2>Situação Atual</h2>
-                </div>
-
-                <div className={styles.statsGrid}>
-                    <div className={styles.statCard}>
-                        <span className={styles.statValue}>{proposal.leads_received}</span>
-                        <span className={styles.statLabel}>Leads Gerados</span>
-                    </div>
-                    <div className={styles.statCard}>
-                        <span className={styles.statValue}>{proposal.leads_responded}</span>
-                        <span className={styles.statLabel}>Respondidos</span>
-                        <span className={styles.statPercent}>{formatPercent(currentResponseRate)}</span>
-                    </div>
-                    {proposal.funnel_type === 'scheduling' && (
-                        <>
-                            <div className={styles.statCard}>
-                                <span className={styles.statValue}>{proposal.leads_scheduled || 0}</span>
-                                <span className={styles.statLabel}>Agendados</span>
-                            </div>
-                            <div className={styles.statCard}>
-                                <span className={styles.statValue}>{proposal.leads_showed_up || 0}</span>
-                                <span className={styles.statLabel}>Compareceram</span>
-                            </div>
-                        </>
-                    )}
-                    <div className={styles.statCard}>
-                        <span className={styles.statValue}>{proposal.leads_converted}</span>
-                        <span className={styles.statLabel}>Vendas</span>
-                        <span className={styles.statPercent}>{formatPercent(currentConversionRate)}</span>
-                    </div>
-                </div>
-
-                <div className={styles.revenueCard}>
-                    <span className={styles.revenueLabel}>Faturamento Atual Estimado</span>
-                    <span className={styles.revenueValue}>
-                        {roi && formatCurrency(roi.currentRevenue)}
-                    </span>
-                    <span className={styles.revenueDetail}>
-                        {proposal.leads_converted} vendas × {formatCurrency(proposal.ltv || proposal.average_ticket)}
-                        {proposal.ltv ? ' (LTV)' : ' (ticket)'}
-                    </span>
-                </div>
-            </RevealSection>
-
-            {/* Funnel Comparison Section */}
-            <FunnelComparison
-                proposal={proposal}
-                roi={roi}
-                formatCurrency={formatCurrency}
-                formatPercent={formatPercent}
-            />
-
-            {/* ROI Projection Section */}
-            <RevealSection className={`${styles.section} ${styles.roiSection}`}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Projeção</span>
-                    <h2>Crescimento com IA</h2>
-                </div>
-
-                <div className={styles.toggleContainer}>
-                    <span className={conservative ? '' : styles.activeLabel}>Padrão</span>
-                    <button
-                        className={`${styles.toggle} ${conservative ? styles.active : ''}`}
-                        onClick={() => setConservative(!conservative)}
-                    >
-                        <span className={styles.toggleKnob}></span>
-                    </button>
-                    <span className={conservative ? styles.activeLabel : ''}>Conservador</span>
-                </div>
-
-                <div className={styles.comparison}>
-                    <div className={styles.comparisonCard}>
-                        <span className={styles.comparisonLabel}>Situação Hoje</span>
-                        <span className={styles.comparisonValue}>{formatCurrency(roi?.currentRevenue)}</span>
-                    </div>
-
-                    <div className={styles.comparisonArrow}>→</div>
-
-                    <div className={`${styles.comparisonCard} ${styles.highlight}`}>
-                        <span className={styles.comparisonLabel}>Com IA</span>
-                        <span className={styles.comparisonValue}>{formatCurrency(roi?.projectedRevenue)}</span>
-                    </div>
-                </div>
-
-                {/* Animated ROI Highlight - Casino Style Counter */}
-                <div className={styles.roiHighlight}>
-                    <div className={styles.roiNumber}>
-                        <span className={styles.roiPlus}>+</span>
-                        <span className={styles.roiValue}>
-                            <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} />
-                        </span>
-                    </div>
-                    <span className={styles.roiLabel}>Aumento projetado no faturamento mensal</span>
-                    {roi?.roiPercentage > 0 && (
-                        <span className={styles.roiPercent}>+{formatPercent(roi.roiPercentage)} de crescimento</span>
-                    )}
-                </div>
-
-                {/* Annual Revenue Comparison - Scratch Card */}
-                <div className={scratchStyles.annualRevenueGrid}>
-                    <div className={scratchStyles.revenueCard}>
-                        <span className={scratchStyles.revenueCardTitle}>Faturamento Anual Atual</span>
-                        <span className={scratchStyles.revenueCardValue}>{formatCurrency(roi?.currentRevenue * 12)}</span>
-                    </div>
-
-                    <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`}>
-                        <span className={scratchStyles.revenueCardTitle}>Potencial Anual com IA</span>
-                        <ScratchCard>
-                            <span className={scratchStyles.revenueCardValue}>{formatCurrency(roi?.projectedRevenue * 12)}</span>
-                        </ScratchCard>
-                    </div>
-                </div>
-
-                <div className={styles.projectionDetails}>
-                    <div className={styles.projectionItem}>
-                        <span className={styles.projectionLabel}>Taxa de Resposta</span>
-                        <div className={styles.projectionComparison}>
-                            <span className={styles.projectionOld}>{formatPercent(currentResponseRate)}</span>
-                            <span className={styles.projectionArrow}>→</span>
-                            <span className={styles.projectionNew}>{formatPercent(proposal.projected_response_rate)}</span>
-                        </div>
-                    </div>
-                    <div className={styles.projectionItem}>
-                        <span className={styles.projectionLabel}>Vendas</span>
-                        <div className={styles.projectionComparison}>
-                            <span className={styles.projectionOld}>{proposal.leads_converted}/mês</span>
-                            <span className={styles.projectionArrow}>→</span>
-                            <span className={styles.projectionNew}>{roi?.projectedConverted}/mês</span>
-                        </div>
-                    </div>
-                </div>
-            </RevealSection>
-
-            {/* Roadmap Section */}
-            <RevealSection className={`${styles.section} ${styles.roadmapSection}`}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Entrega</span>
-                    <h2>Cronograma</h2>
-                </div>
-
-                {(() => {
-                    // ... (Calculations stay the same) ...
-                    const analysisDays = proposal.roadmap_analysis_days || 7;
-                    const approvalDays = proposal.roadmap_approval_days || 7;
-                    const developmentDays = proposal.roadmap_development_days || 21;
-                    const testingDays = proposal.roadmap_testing_days || 14;
-                    const totalDays = analysisDays + approvalDays + developmentDays + testingDays;
-                    const totalWeeks = Math.ceil(totalDays / 7);
-                    const weeks = Array.from({ length: totalWeeks + 1 }, (_, i) => i + 1);
-                    const daysPerWeek = 7;
-                    const analysisEnd = Math.ceil(analysisDays / daysPerWeek) + 1;
-                    const approvalEnd = Math.ceil((analysisDays + approvalDays) / daysPerWeek) + 1;
-                    const devEnd = Math.ceil((analysisDays + approvalDays + developmentDays) / daysPerWeek) + 1;
-                    const testEnd = Math.ceil((analysisDays + approvalDays + developmentDays + testingDays) / daysPerWeek) + 1;
-
-                    return (
-                        <>
-                            <div className={styles.roadmapContainer}>
-                                <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}></div>
-                                    {weeks.map(week => (
-                                        <div key={week} className={styles.roadmapWeek}>Sem {week}</div>
-                                    ))}
+                            <div className={styles.vsCards}>
+                                <div className={`${styles.vsCard} ${styles.withoutAI}`}>
+                                    <h3>Gargalos Encontrados</h3>
+                                    <ul className={styles.vsList}>
+                                        {(proposal.challenges && proposal.challenges.length > 0 ? proposal.challenges : [
+                                            'Tempo de resposta elevado', 'Perda de leads fora do horário', 'Falta de padronização', 'Dificuldade em escalar'
+                                        ]).map((item, i) => (
+                                            <li key={i}><span className={styles.crossIcon}>—</span> {item}</li>
+                                        ))}
+                                    </ul>
                                 </div>
-
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}>Análise</div>
-                                    <div className={`${styles.roadmapBar} ${styles.roadmapBar1}`} style={{ gridColumn: `2 / ${analysisEnd}` }}></div>
-                                </div>
-
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}>Definição</div>
-                                    <div className={`${styles.roadmapBar} ${styles.roadmapBar2}`} style={{ gridColumn: `2 / ${approvalEnd}` }}></div>
-                                </div>
-
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}>Desenvolvimento</div>
-                                    <div className={`${styles.roadmapBar} ${styles.roadmapBar3}`} style={{ gridColumn: `${analysisEnd} / ${devEnd}` }}></div>
-                                </div>
-
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}>Implementação</div>
-                                    <div className={`${styles.roadmapBar} ${styles.roadmapBar4}`} style={{ gridColumn: `${devEnd} / ${testEnd}` }}></div>
-                                </div>
-
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${weeks.length}, 1fr)` }}>
-                                    <div className={styles.roadmapPhaseLabel}>Lançamento</div>
-                                    <div className={`${styles.roadmapBar} ${styles.roadmapBar5}`} style={{ gridColumn: `${testEnd} / ${testEnd + 1}` }}></div>
+                                <div className={styles.statCard} style={{ maxWidth: '400px', margin: '0 auto', border: '1px solid var(--brand-neon)' }}>
+                                    <span className={styles.statValue}>{proposal.leads_received}</span>
+                                    <span className={styles.statLabel}>Leads Gerados/Mês</span>
+                                    <span className={styles.statPercent} style={{ color: 'var(--brand-neon)', fontWeight: 'bold' }}>Base para análise</span>
                                 </div>
                             </div>
-
-                            <div className={styles.roadmapNote}>
-                                <span>Prazo estimado: <strong>{totalDays} dias</strong> ({totalWeeks} semanas) para operação total.</span>
-                            </div>
-                        </>
-                    );
-                })()}
-            </RevealSection>
-
-            {/* Pricing Section */}
-            <RevealSection className={`${styles.section} ${styles.pricingSection}`}>
-                <div className={styles.sectionHeader}>
-                    <span className={styles.sectionTag}>Investimento</span>
-                    <h2>Condições</h2>
+                        </RevealSection>
+                    </div>
                 </div>
 
-                <div className={styles.pricingGrid}>
-                    <div className={styles.pricingCard}>
-                        <div className={styles.pricingHeader}>
-                            <h3>Implementação</h3>
-                        </div>
-                        <div className={styles.pricingMain}>
-                            <span className={styles.pricingValue}>{formatCurrency(proposal.price_total)}</span>
-                            <span className={styles.pricingLabel}>pagamento único</span>
-                        </div>
+                {/* SLIDE 3: SOLUTION */}
+                <div className={`${slideStyles.slide} ${currentSlide === 2 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 2}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Solução</span>
+                                <h2>Por que IA?</h2>
+                            </div>
+                            <div className={styles.benefitsGrid}>
+                                {benefits.slice(0, 6).map(benefitId => {
+                                    const benefit = BENEFITS_MAP[benefitId];
+                                    if (!benefit) return null;
+                                    return (
+                                        <div key={benefitId} className={styles.benefitCard}>
+                                            <h4 className={styles.benefitTitle}>{benefit.label}</h4>
+                                            <p className={styles.benefitDesc}>{benefit.desc}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
 
-                        {proposal.price_upfront && proposal.installments > 1 && (
-                            <div className={styles.pricingDetails}>
-                                <div className={styles.pricingLine}>
-                                    <span>Entrada</span>
-                                    <span>{formatCurrency(proposal.price_upfront)}</span>
-                                </div>
-                                <div className={styles.pricingLine}>
-                                    <span>Parcelado em {proposal.installments}x</span>
-                                    <span>
-                                        {formatCurrency((proposal.price_total - proposal.price_upfront) / proposal.installments)}
+                {/* SLIDE 4: FUNNEL COMPARISON */}
+                <div className={`${slideStyles.slide} ${currentSlide === 3 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <FunnelComparison
+                            proposal={proposal}
+                            roi={roi}
+                            formatCurrency={formatCurrency}
+                            formatPercent={formatPercent}
+                            isActive={currentSlide === 3}
+                        />
+                    </div>
+                </div>
+
+                {/* SLIDE 5: ROI PROJECTION (With Animations) */}
+                <div className={`${slideStyles.slide} ${currentSlide === 4 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 4} className={styles.roiSection}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Potencial</span>
+                                <h2>Projeção de Resultado</h2>
+                            </div>
+
+                            <div className={styles.roiHighlight}>
+                                <div className={styles.roiNumber}>
+                                    <span className={styles.roiPlus}>+</span>
+                                    <span className={styles.roiValue}>
+                                        <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} isActive={currentSlide === 4} />
                                     </span>
                                 </div>
-                            </div>
-                        )}
-
-                        <div className={styles.paymentMethod}>
-                            <span>Método: {PAYMENT_METHODS[proposal.implementation_payment_method] || 'PIX ou Cartão'}</span>
-                        </div>
-
-                        <div className={styles.pricingIncluded}>
-                            <span className={styles.includedTitle}>Incluso:</span>
-                            <ul>
-                                <li>Configuração completa</li>
-                                <li>Integração WhatsApp</li>
-                                <li>Inteligência personalizada</li>
-                                <li>Suporte na ativação</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    {proposal.has_maintenance && (
-                        <div className={`${styles.pricingCard} ${styles.maintenanceCard}`}>
-                            <div className={styles.pricingHeader}>
-                                <h3>Suporte e Manutenção</h3>
-                            </div>
-                            <div className={styles.pricingMain}>
-                                <span className={styles.pricingValue}>{formatCurrency(proposal.maintenance_price)}</span>
-                                <span className={styles.pricingLabel}>por mês</span>
+                                <span className={styles.roiLabel}>Faturamento adicional mensal</span>
                             </div>
 
-                            <div className={styles.paymentMethod}>
-                                <span>Método: {PAYMENT_METHODS[proposal.maintenance_payment_method] || 'PIX ou Cartão'}</span>
-                            </div>
-
-                            {proposal.maintenance_description && (
-                                <div className={styles.pricingIncluded}>
-                                    <span className={styles.includedTitle}>Incluso:</span>
-                                    <p className={styles.maintenanceDesc}>{proposal.maintenance_description}</p>
+                            <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '40px' }}>
+                                <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`} style={{ background: 'var(--brand-dark-2)', border: '1px solid var(--brand-neon)' }}>
+                                    <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>Potencial Anual com IA</span>
+                                    <ScratchCard>
+                                        <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.projectedRevenue * 12)}</span>
+                                    </ScratchCard>
                                 </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Operational Costs - OpenAI Tokens */}
-                {proposal.cost_per_conversation && (
-                    <div className={styles.operationalCosts}>
-                        <h4 className={styles.operationalCostsTitle}>Custos Operacionais (por conta do cliente)</h4>
-                        <div className={styles.operationalCostsGrid}>
-                            <div className={styles.costItem}>
-                                <span className={styles.costValue}>{formatCurrencyDecimal(proposal.cost_per_conversation)}</span>
-                                <span className={styles.costLabel}>Custo médio por conversa</span>
-                                <span className={styles.costDetail}>Tokens OpenAI</span>
                             </div>
-                            <div className={styles.costItem}>
-                                <span className={styles.costValue}>
-                                    {formatCurrency(proposal.estimated_monthly_cost || (proposal.cost_per_conversation * proposal.leads_received))}
-                                </span>
-                                <span className={styles.costLabel}>Estimativa mensal</span>
-                                <span className={styles.costDetail}>Baseado em {proposal.leads_received} leads/mês</span>
-                            </div>
-                        </div>
+                        </RevealSection>
                     </div>
-                )}
-
-                <div className={styles.ctaContainer}>
-                    <a
-                        href={`https://wa.me/?text=Olá! Tenho interesse na proposta para ${proposal.company_name}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.ctaButton}
-                    >
-                        Aceitar Proposta
-                    </a>
                 </div>
-            </RevealSection>
 
-            {/* Footer */}
-            <footer className={styles.footer}>
-                <p>Proposta gerada especialmente para {proposal.company_name}</p>
-                <p className={styles.footerDate}>
-                    {new Date(proposal.created_at).toLocaleDateString('pt-BR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })}
-                </p>
-            </footer>
+                {/* SLIDE 6: ROADMAP */}
+                <div className={`${slideStyles.slide} ${currentSlide === 5 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 5} className={styles.roadmapSection}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Cronograma</span>
+                                <h2>Plano de Entrega</h2>
+                            </div>
+                            <div className={styles.roadmapContainer}>
+                                <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', marginBottom: '20px', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
+                                    <div></div>
+                                    <div>Sem 1</div><div>Sem 2</div><div>Sem 3</div><div>Sem 4</div>
+                                </div>
+                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Análise</div>
+                                    <div className={styles.roadmapBar} style={{ gridColumn: '2 / 3' }}></div>
+                                </div>
+                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Setup</div>
+                                    <div className={styles.roadmapBar} style={{ gridColumn: '2 / 4' }}></div>
+                                </div>
+                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Testes</div>
+                                    <div className={styles.roadmapBar} style={{ gridColumn: '4 / 5' }}></div>
+                                </div>
+                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Go-Live</div>
+                                    <div className={styles.roadmapBar} style={{ gridColumn: '5 / 6' }}></div>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '1.2rem', color: 'var(--brand-muted)' }}>Prazo estimado: <strong style={{ color: 'var(--brand-neon)' }}>30 dias</strong> para operação total.</span>
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
+
+                {/* SLIDE 7: INVESTMENT */}
+                <div className={`${slideStyles.slide} ${currentSlide === 6 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 6} className={styles.pricingSection}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Investimento</span>
+                                <h2>Condições Especiais</h2>
+                            </div>
+                            <div className={styles.pricingGrid}>
+                                <div className={styles.pricingCard}>
+                                    <div className={styles.pricingHeader}><h3>Implementação</h3></div>
+                                    <div className={styles.pricingValue}>{formatCurrency(proposal.price_total)}</div>
+                                    <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>pagamento único</div>
+                                    <div className={styles.pricingIncluded}>
+                                        <ul>
+                                            <li>Configuração Total</li>
+                                            <li>Treinamento da IA</li>
+                                            <li>Garantia de 30 dias</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                {proposal.has_maintenance && (
+                                    <div className={`${styles.pricingCard} ${styles.maintenanceCard}`}>
+                                        <div className={styles.pricingHeader}><h3>Mensalidade</h3></div>
+                                        <div className={styles.pricingValue}>{formatCurrency(proposal.maintenance_price)}</div>
+                                        <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>por mês</div>
+                                        <div className={styles.pricingIncluded}>
+                                            <ul>
+                                                <li>Manutenção contínua</li>
+                                                <li>Ajustes ilimitados</li>
+                                                <li>Relatórios mensais</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
+
+                {/* SLIDE 8: CTA */}
+                <div className={`${slideStyles.slide} ${currentSlide === 7 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent} style={{ textAlign: 'center' }}>
+                        <RevealSection isActive={currentSlide === 7}>
+                            <h2 style={{ fontSize: '4.5rem', fontWeight: '900', marginBottom: '2rem', lineHeight: '1.1' }}>Vamos transformar seus resultados?</h2>
+                            <p style={{ fontSize: '1.5rem', color: 'var(--brand-muted)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>
+                                Esta proposta está alinhada com os objetivos da <strong style={{ color: 'white' }}>{proposal.company_name}</strong>?
+                            </p>
+                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                                <a
+                                    href={`https://wa.me/?text=Olá! Gostei da proposta para ${proposal.company_name}, vamos fechar?`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.ctaButton}
+                                >
+                                    Aceitar Proposta Agora
+                                </a>
+                            </div>
+                            <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
+                                <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.payment_method] || 'PIX'}</p>
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 }
