@@ -18,6 +18,7 @@ const BENEFITS_MAP = {
     'consistency': { label: 'Padrão Executivo', icon: '○', desc: 'Garante que o script perfeito seja seguido à risca sempre' },
     'data_collection': { label: 'Inteligência de Dados', icon: '○', desc: 'Coleta e organiza dados estratégicos automaticamente' },
     'integration': { label: 'Fluxo Direto', icon: '○', desc: 'Integração perfeita com seu CRM e ferramentas atuais' },
+    'follow_up': { label: 'Follow-up Automático', icon: '○', desc: 'Acompanhamento persistente e inteligente dos leads que não responderam' },
 };
 
 const PAYMENT_METHODS = {
