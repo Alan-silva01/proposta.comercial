@@ -15,6 +15,7 @@ const BENEFITS_OPTIONS = [
     { id: 'consistency', label: 'Padrão de atendimento', icon: '🎖️' },
     { id: 'data_collection', label: 'Coleta de dados', icon: '📊' },
     { id: 'integration', label: 'Integração com CRM', icon: '🔗' },
+    { id: 'follow_up', label: 'Follow-up Automático', icon: '🔄' },
 ];
 
 const INDUSTRIES = [
