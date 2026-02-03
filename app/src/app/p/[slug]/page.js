@@ -87,8 +87,8 @@ function AnimatedCounter({ value, duration = 1500, prefix = '', isActive }) {
     const formatted = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(displayValue);
 
     return <span>{prefix}{formatted}</span>;
@@ -406,7 +406,7 @@ export default function ProposalPage() {
     const prevSlide = () => setCurrentSlide(prev => Math.max(prev - 1, 0));
 
     function formatCurrency(value) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value || 0);
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0);
     }
 
     function formatPercent(value) {
