@@ -345,7 +345,7 @@ export default function ProposalPage() {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const hasComparison = (proposal?.comparison_with_ai?.length > 0 || proposal?.comparison_without_ai?.length > 0);
-    const hasLLMCosts = !!(proposal?.cost_per_conversation || proposal?.estimated_monthly_cost);
+    const hasLLMCosts = !!(proposal?.cost_per_conversation > 0 || proposal?.estimated_monthly_cost > 0);
 
     // Hero (0), Diagnosis (1), Solution (2), [Comparison], Funnel, Impacto, Potencial, Roadmap, Pricing, [LLM], CTA
     const slidesOrder = [
@@ -869,9 +869,6 @@ export default function ProposalPage() {
                                             >
                                                 Falar com Consultor
                                             </a>
-                                            <button className={styles.ctaButtonSecondary} onClick={() => window.print()}>
-                                                Baixar PDF
-                                            </button>
                                         </div>
                                         <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
                                             <p>Proposta válida por 15 dias • Pagamento via {PAYMENT_METHODS[proposal.payment_method] || 'PIX'}</p>

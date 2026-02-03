@@ -124,10 +124,22 @@ export default function NewProposalPage() {
 
     function handleChange(e) {
         const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'number' ? value : value,
-        }));
+
+        setFormData(prev => {
+            const newState = {
+                ...prev,
+                [name]: type === 'number' ? value : value,
+            };
+
+            // Cálculo automático do custo mensal estimado
+            if (name === 'leads_received' || name === 'cost_per_conversation') {
+                const leads = name === 'leads_received' ? (parseFloat(value) || 0) : (parseFloat(prev.leads_received) || 0);
+                const costPerConv = name === 'cost_per_conversation' ? (parseFloat(value) || 0) : (parseFloat(prev.cost_per_conversation) || 0);
+                newState.estimated_monthly_cost = (leads * costPerConv).toFixed(2);
+            }
+
+            return newState;
+        });
     }
 
     function toggleBenefit(benefitId) {
@@ -502,18 +514,7 @@ export default function NewProposalPage() {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label className="label">Análise do Diagnóstico (Opcional)</label>
-                            <textarea
-                                name="diagnosis_text"
-                                value={formData.diagnosis_text}
-                                onChange={handleChange}
-                                className="input"
-                                placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
-                                style={{ minHeight: '100px', resize: 'vertical' }}
-                            />
-                            <small className={styles.hint}>Texto que aparecerá no slide de diagnóstico para complementar os gargalos.</small>
-                        </div>
+
                     </div>
                 )}
 
@@ -795,7 +796,7 @@ export default function NewProposalPage() {
                                         placeholder="Ex: 0.15"
                                         step="0.0001"
                                     />
-                                    <small className={styles.hint}>Valor estimado de tokens por conversa</small>
+                                    <small className={styles.hint}>Custo médio de tokens por conversa. Cálculo: leads × custo/conversa</small>
                                 </div>
 
                                 <div className="form-group">
@@ -809,7 +810,7 @@ export default function NewProposalPage() {
                                         placeholder="Ex: 50.00"
                                         step="0.01"
                                     />
-                                    <small className={styles.hint}>Baseado na quantidade de leads</small>
+                                    <small className={styles.hint}>Estimativa calculada com base no volume de leads e custo por conversa</small>
                                 </div>
                             </div>
                         </div>
@@ -1027,6 +1028,19 @@ export default function NewProposalPage() {
                                         + Adicionar gargalo personalizado
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: 'var(--space-6)' }}>
+                                <label className="label">Análise do Diagnóstico (Opcional)</label>
+                                <textarea
+                                    name="diagnosis_text"
+                                    value={formData.diagnosis_text}
+                                    onChange={handleChange}
+                                    className="input"
+                                    placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
+                                    style={{ minHeight: '100px', resize: 'vertical' }}
+                                />
+                                <small className={styles.hint}>Esta análise aparecerá no slide de diagnóstico, ao lado dos gargalos encontrados.</small>
                             </div>
 
                             {/* Comparativo Com IA vs Sem IA */}

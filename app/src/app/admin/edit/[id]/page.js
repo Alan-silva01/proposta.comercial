@@ -1,89 +1,82 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import styles from '../../new/new.module.css';
-
-const BENEFITS_OPTIONS = [
-    { id: '24/7', label: 'Atendimento 24/7', icon: '🕐' },
-    { id: 'no_absences', label: 'Sem faltas ou atrasos', icon: '✅' },
-    { id: 'instant_response', label: 'Resposta instantânea', icon: '⚡' },
-    { id: 'lead_qualification', label: 'Qualificação automática', icon: '🎯' },
-    { id: 'scalability', label: 'Escalabilidade ilimitada', icon: '📈' },
-    { id: 'consistency', label: 'Padrão de atendimento', icon: '🎖️' },
-    { id: 'data_collection', label: 'Coleta de dados', icon: '📊' },
-    { id: 'integration', label: 'Integração com CRM', icon: '🔗' },
-    { id: 'follow_up', label: 'Follow-up Automático', icon: '🔄' },
-];
+import styles from './edit.module.css';
 
 const INDUSTRIES = [
-    'Clínica/Saúde',
-    'E-commerce',
-    'Imobiliária',
-    'Advocacia',
-    'Consultoria',
+    'Saúde/Clínicas',
     'Educação',
-    'Serviços',
-    'Varejo',
-    'Outro',
+    'Imobiliário',
+    'E-commerce',
+    'Serviços B2B',
+    'Infoprodutos',
+    'Varejo Local',
+    'Outros'
 ];
 
-export default function EditProposalPage() {
+const PAYMENT_METHODS = {
+    pix_cartao: 'PIX ou Cartão',
+    pix: 'Apenas PIX',
+    cartao: 'Apenas Cartão',
+    boleto: 'Boleto',
+    todos: 'Todos os meios'
+};
+
+export default function EditProposal() {
     const router = useRouter();
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-
     const [formData, setFormData] = useState({
         client_name: '',
         company_name: '',
         industry: '',
-        funnel_type: 'simple',
-        leads_received: '',
-        leads_responded: '',
-        leads_scheduled: '',
-        leads_showed_up: '',
-        leads_converted: '',
-        average_ticket: '',
-        ltv: '',
-        projected_response_rate: '95',
-        projected_conversion_rate: '',
-        projected_show_rate: '80',
-        price_total: '',
-        price_upfront: '',
-        installments: '1',
-        implementation_payment_method: 'pix_cartao',
-        implementation_features: [],
-        has_maintenance: false,
-        maintenance_price: '',
-        maintenance_description: '',
-        maintenance_features: [],
-        maintenance_payment_method: 'pix_cartao',
-        // Roadmap
-        roadmap_analysis_days: '7',
-        roadmap_approval_days: '7',
-        roadmap_development_days: '21',
-        roadmap_testing_days: '14',
-        // Visual
-        primary_color: '#BFFF00',
-        hero_media: '',
-        benefits: [],
-        challenges: [],
-        // Comparison
-        comparison_with_ai: [],
-        comparison_without_ai: [],
-        market_stats: [],
-        // Costs
-        cost_per_conversation: '',
-        estimated_monthly_cost: '',
-        diagnosis_text: '',
         status: 'draft',
+        funnel_type: 'simple',
+        leads_received: 0,
+        leads_responded: 0,
+        leads_scheduled: 0,
+        leads_showed_up: 0,
+        leads_converted: 0,
+        average_ticket: 0,
+        ltv: 0,
+        projected_response_rate: 95,
+        projected_conversion_rate: 0,
+        projected_show_rate: 80,
+        price_total: 0,
+        price_upfront: 0,
+        installments: '1',
+        payment_method: 'pix_cartao',
+        has_maintenance: true,
+        maintenance_price: 297,
+        maintenance_payment_method: 'pix_cartao',
+        primary_color: '#00D1FF',
+        roadmap_analysis_days: 2,
+        roadmap_approval_days: 1,
+        roadmap_development_days: 7,
+        roadmap_testing_days: 2,
+        implementation_features: ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias'],
+        maintenance_features: ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais'],
+        benefits: ['atendimento_24h', 'escalabilidade', 'reducao_custo', 'qualificacao_leads'],
+        challenges: [],
+        comparison_with_ai: ['Responde em segundos', 'Atendimento 24/7', 'Não esquece de fazer follow-up'],
+        comparison_without_ai: ['Demora 1h ou mais', 'Perde vendas no final de semana', 'Esquece de retornar para o lead'],
+        market_stats: [
+            { text: 'Contatar um lead nos primeiros 5 mins aumenta em', highlight: '9x as chances de conversão' },
+            { text: 'O atendimento por IA reduz o custo de aquisição em até', highlight: '40%' }
+        ],
+        diagnosis_text: '',
+        cost_per_conversation: 0,
+        estimated_monthly_cost: 0
     });
 
     useEffect(() => {
-        fetchProposal();
+        if (id) {
+            fetchProposal();
+        }
     }, [id]);
 
     async function fetchProposal() {
@@ -93,210 +86,128 @@ export default function EditProposalPage() {
             .eq('id', id)
             .single();
 
-        if (error || !data) {
-            alert('Proposta não encontrada');
+        if (error) {
+            console.error('Erro:', error);
+            alert('Erro ao carregar proposta');
             router.push('/admin');
             return;
         }
 
-        setFormData({
-            client_name: data.client_name || '',
-            company_name: data.company_name || '',
-            industry: data.industry || '',
-            funnel_type: data.funnel_type || 'simple',
-            leads_received: data.leads_received?.toString() || '',
-            leads_responded: data.leads_responded?.toString() || '',
-            leads_scheduled: data.leads_scheduled?.toString() || '',
-            leads_showed_up: data.leads_showed_up?.toString() || '',
-            leads_converted: data.leads_converted?.toString() || '',
-            average_ticket: data.average_ticket?.toString() || '',
-            ltv: data.ltv?.toString() || '',
-            projected_response_rate: data.projected_response_rate?.toString() || '95',
-            projected_conversion_rate: data.projected_conversion_rate?.toString() || '',
-            projected_show_rate: data.projected_show_rate?.toString() || '80',
-            price_total: data.price_total?.toString() || '',
-            price_upfront: data.price_upfront?.toString() || '',
-            installments: data.installments?.toString() || '1',
-            implementation_payment_method: data.implementation_payment_method || 'pix_cartao',
-            implementation_features: data.implementation_features || ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias'],
-            has_maintenance: data.has_maintenance || false,
-            maintenance_price: data.maintenance_price?.toString() || '',
-            maintenance_description: data.maintenance_description || '',
-            maintenance_features: data.maintenance_features || ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais'],
-            maintenance_payment_method: data.maintenance_payment_method || 'pix_cartao',
-            // Roadmap
-            roadmap_analysis_days: data.roadmap_analysis_days?.toString() || '7',
-            roadmap_approval_days: data.roadmap_approval_days?.toString() || '7',
-            roadmap_development_days: data.roadmap_development_days?.toString() || '21',
-            roadmap_testing_days: data.roadmap_testing_days?.toString() || '14',
-            // Visual
-            primary_color: data.primary_color || '#BFFF00',
-            hero_media: data.hero_media || '',
-            benefits: data.benefits || [],
-            challenges: data.challenges || [],
-            // Comparison
-            comparison_with_ai: data.comparison_with_ai || [],
-            comparison_without_ai: data.comparison_without_ai || [],
-            market_stats: data.market_stats || [],
-            // Costs
-            cost_per_conversation: data.cost_per_conversation?.toString() || '',
-            estimated_monthly_cost: data.estimated_monthly_cost?.toString() || '',
-            diagnosis_text: data.diagnosis_text || '',
-            status: data.status || 'draft',
-        });
-
+        if (data) {
+            setFormData({
+                ...formData,
+                ...data,
+                // Garantir que campos de lista não sejam nulos
+                implementation_features: data.implementation_features || [],
+                maintenance_features: data.maintenance_features || [],
+                benefits: data.benefits || [],
+                challenges: data.challenges || [],
+                comparison_with_ai: data.comparison_with_ai || [],
+                comparison_without_ai: data.comparison_without_ai || [],
+                market_stats: data.market_stats || []
+            });
+        }
         setLoading(false);
     }
 
     function handleChange(e) {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+
+        setFormData(prev => {
+            const newState = {
+                ...prev,
+                [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value)
+            };
+
+            // Cálculo automático do custo mensal estimado
+            if (name === 'leads_received' || name === 'cost_per_conversation') {
+                const leads = name === 'leads_received' ? (parseFloat(value) || 0) : (parseFloat(prev.leads_received) || 0);
+                const costPerConv = name === 'cost_per_conversation' ? (parseFloat(value) || 0) : (parseFloat(prev.cost_per_conversation) || 0);
+                newState.estimated_monthly_cost = parseFloat((leads * costPerConv).toFixed(2));
+            }
+
+            return newState;
+        });
     }
 
-    function toggleBenefit(benefitId) {
+    function updateFeature(type, index, value) {
+        setFormData(prev => {
+            const newList = [...prev[type]];
+            newList[index] = value;
+            return { ...prev, [type]: newList };
+        });
+    }
+
+    function addFeature(type) {
         setFormData(prev => ({
             ...prev,
-            benefits: prev.benefits.includes(benefitId)
-                ? prev.benefits.filter(b => b !== benefitId)
-                : [...prev.benefits, benefitId],
+            [type]: [...prev[type], '']
         }));
     }
 
-    function toggleChallenge(challenge) {
+    function removeFeature(type, index) {
         setFormData(prev => ({
             ...prev,
-            challenges: prev.challenges.includes(challenge)
-                ? prev.challenges.filter(c => c !== challenge)
-                : [...prev.challenges, challenge],
+            [type]: prev[type].filter((_, i) => i !== index)
         }));
     }
 
-    // Funções para Comparativo Com/Sem IA
-    function updateComparisonItem(field, index, value) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: prev[field].map((item, i) => i === index ? value : item),
-        }));
+    function toggleBenefit(id) {
+        setFormData(prev => {
+            const benefits = prev.benefits.includes(id)
+                ? prev.benefits.filter(b => b !== id)
+                : [...prev.benefits, id];
+            return { ...prev, benefits };
+        });
     }
 
-    function addComparisonItem(field) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: [...prev[field], ''],
-        }));
+    function toggleChallenge(id) {
+        setFormData(prev => {
+            const challenges = prev.challenges.includes(id)
+                ? prev.challenges.filter(c => c !== id)
+                : [...prev.challenges, id];
+            return { ...prev, challenges };
+        });
     }
 
-    function removeComparisonItem(field, index) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: prev[field].filter((_, i) => i !== index),
-        }));
-    }
+    const updateComparisonItem = (field, index, value) => {
+        const newList = [...formData[field]];
+        newList[index] = value;
+        setFormData(prev => ({ ...prev, [field]: newList }));
+    };
 
-    // Funções para Market Stats
-    function updateMarketStat(index, field, value) {
-        setFormData(prev => ({
-            ...prev,
-            market_stats: prev.market_stats.map((stat, i) =>
-                i === index ? { ...stat, [field]: value } : stat
-            ),
-        }));
-    }
+    const addComparisonItem = (field) => {
+        setFormData(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+    };
 
-    function addMarketStat() {
-        setFormData(prev => ({
-            ...prev,
-            market_stats: [...prev.market_stats, { text: '', highlight: '' }],
-        }));
-    }
+    const removeComparisonItem = (field, index) => {
+        setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
+    };
 
-    function removeMarketStat(index) {
-        setFormData(prev => ({
-            ...prev,
-            market_stats: prev.market_stats.filter((_, i) => i !== index),
-        }));
-    }
+    const updateMarketStat = (index, field, value) => {
+        const newList = [...formData.market_stats];
+        newList[index] = { ...newList[index], [field]: value };
+        setFormData(prev => ({ ...prev, market_stats: newList }));
+    };
 
-    // Funções para Implementation Features
-    function updateFeature(field, index, value) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: prev[field].map((item, i) => i === index ? value : item),
-        }));
-    }
+    const addMarketStat = () => {
+        setFormData(prev => ({ ...prev, market_stats: [...prev.market_stats, { text: '', highlight: '' }] }));
+    };
 
-    function addFeature(field) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: [...prev[field], ''],
-        }));
-    }
-
-    function removeFeature(field, index) {
-        setFormData(prev => ({
-            ...prev,
-            [field]: prev[field].filter((_, i) => i !== index),
-        }));
-    }
+    const removeMarketStat = (index) => {
+        setFormData(prev => ({ ...prev, market_stats: prev.market_stats.filter((_, i) => i !== index) }));
+    };
 
     async function handleSubmit(e) {
         e.preventDefault();
         setSaving(true);
 
-        const proposalData = {
-            client_name: formData.client_name,
-            company_name: formData.company_name,
-            industry: formData.industry,
-            funnel_type: formData.funnel_type,
-            leads_received: parseInt(formData.leads_received) || 0,
-            leads_responded: parseInt(formData.leads_responded) || 0,
-            leads_scheduled: formData.funnel_type === 'scheduling' ? parseInt(formData.leads_scheduled) || null : null,
-            leads_showed_up: formData.funnel_type === 'scheduling' ? parseInt(formData.leads_showed_up) || null : null,
-            leads_converted: parseInt(formData.leads_converted) || 0,
-            average_ticket: parseFloat(formData.average_ticket) || 0,
-            ltv: formData.ltv ? parseFloat(formData.ltv) : null,
-            projected_response_rate: parseFloat(formData.projected_response_rate) || 95,
-            projected_conversion_rate: parseFloat(formData.projected_conversion_rate) || null,
-            projected_show_rate: formData.funnel_type === 'scheduling' ? parseFloat(formData.projected_show_rate) || 80 : null,
-            price_total: parseFloat(formData.price_total) || 0,
-            price_upfront: formData.price_upfront ? parseFloat(formData.price_upfront) : null,
-            installments: parseInt(formData.installments) || 1,
-            implementation_payment_method: formData.implementation_payment_method,
-            implementation_features: formData.implementation_features.filter(f => f.trim() !== ''),
-            has_maintenance: formData.has_maintenance,
-            maintenance_price: formData.has_maintenance ? parseFloat(formData.maintenance_price) || 0 : null,
-            maintenance_features: formData.has_maintenance ? formData.maintenance_features.filter(f => f.trim() !== '') : [],
-            maintenance_description: formData.has_maintenance ? formData.maintenance_description : null,
-            maintenance_payment_method: formData.has_maintenance ? formData.maintenance_payment_method : null,
-            // Roadmap
-            roadmap_analysis_days: parseInt(formData.roadmap_analysis_days) || 7,
-            roadmap_approval_days: parseInt(formData.roadmap_approval_days) || 7,
-            roadmap_development_days: parseInt(formData.roadmap_development_days) || 21,
-            roadmap_testing_days: parseInt(formData.roadmap_testing_days) || 14,
-            roadmap_total_days: (parseInt(formData.roadmap_analysis_days) || 7) +
-                (parseInt(formData.roadmap_approval_days) || 7) +
-                (parseInt(formData.roadmap_development_days) || 21) +
-                (parseInt(formData.roadmap_testing_days) || 14),
-            // Visual
-            primary_color: formData.primary_color,
-            hero_media: formData.hero_media || null,
-            benefits: formData.benefits,
-            challenges: formData.challenges,
-            // Comparison
-            comparison_with_ai: formData.comparison_with_ai.filter(item => item.trim() !== ''),
-            comparison_without_ai: formData.comparison_without_ai.filter(item => item.trim() !== ''),
-            market_stats: formData.market_stats.filter(stat => stat.text?.trim() !== '' || stat.highlight?.trim() !== ''),
-            // Costs
-            cost_per_conversation: formData.cost_per_conversation ? parseFloat(formData.cost_per_conversation) : null,
-            estimated_monthly_cost: formData.estimated_monthly_cost ? parseFloat(formData.estimated_monthly_cost) : null,
-            diagnosis_text: formData.diagnosis_text,
-            status: formData.status,
-            updated_at: new Date().toISOString(),
-        };
-
         const { error } = await supabase
             .from('proposals')
-            .update(proposalData)
+            .update({
+                ...formData,
+                updated_at: new Date().toISOString()
+            })
             .eq('id', id);
 
         if (error) {
@@ -610,22 +521,28 @@ export default function EditProposalPage() {
                         )}
                     </div>
 
-                    {/* Custos Operacionais */}
+                    {/* Custos Operacionais - OpenAI */}
                     <div className={styles.section}>
                         <h3 className={styles.sectionTitle}>⚡ Custos Operacionais (OpenAI)</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
+                            Custos de tokens pagos pelo cliente
+                        </p>
+
                         <div className={styles.gridTwo}>
                             <div className="form-group">
-                                <label className="label">Custo por Conversa (R$)</label>
+                                <label className="label">Custo Médio por Conversa (R$)</label>
                                 <input
                                     type="number"
                                     name="cost_per_conversation"
                                     value={formData.cost_per_conversation}
                                     onChange={handleChange}
                                     className="input"
-                                    step="0.0001"
                                     placeholder="Ex: 0.15"
+                                    step="0.0001"
                                 />
+                                <small className={styles.hint}>Custo médio de tokens por conversa. Cálculo: leads × custo/conversa</small>
                             </div>
+
                             <div className="form-group">
                                 <label className="label">Custo Mensal Estimado (R$)</label>
                                 <input
@@ -634,72 +551,28 @@ export default function EditProposalPage() {
                                     value={formData.estimated_monthly_cost}
                                     onChange={handleChange}
                                     className="input"
-                                    step="0.01"
                                     placeholder="Ex: 50.00"
+                                    step="0.01"
                                 />
+                                <small className={styles.hint}>Estimativa calculada com base no volume de leads e custo por conversa</small>
                             </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="label">Análise do Diagnóstico (Opcional)</label>
-                            <textarea
-                                name="diagnosis_text"
-                                value={formData.diagnosis_text}
-                                onChange={handleChange}
-                                className="input"
-                                placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
-                                style={{ minHeight: '100px', resize: 'vertical' }}
-                            />
-                            <p className={styles.inputHint}>Texto que aparecerá no slide de diagnóstico para complementar os gargalos.</p>
                         </div>
                     </div>
 
-                    {/* Visual */}
+                    {/* Visual & Diagnóstico */}
                     <div className={styles.section}>
-                        <h3 className={styles.sectionTitle}>🎨 Personalização Visual</h3>
-
-                        <div className={styles.gridTwo}>
-                            <div className="form-group">
-                                <label className="label">Cor Principal</label>
-                                <div className={styles.colorPicker}>
-                                    <input type="color" name="primary_color" value={formData.primary_color} onChange={handleChange} className={styles.colorInput} />
-                                    <span>{formData.primary_color}</span>
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label className="label">Mídia de Fundo (Hero)</label>
-                                <input
-                                    type="text"
-                                    name="hero_media"
-                                    value={formData.hero_media}
-                                    onChange={handleChange}
-                                    className="input"
-                                    placeholder="URL da imagem ou vídeo de fundo"
-                                />
-                                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-                                    URL de imagem (.jpg, .png, .webp) ou vídeo (.mp4, .mov, .webm)
-                                </small>
-                            </div>
-                        </div>
+                        <h3 className={styles.sectionTitle}>🎨 Personalização & Diagnóstico</h3>
 
                         <div className="form-group">
-                            <label className="label">Benefícios</label>
-                            <div className={styles.benefitsGrid}>
-                                {BENEFITS_OPTIONS.map(benefit => (
-                                    <label key={benefit.id} className={`${styles.benefitCard} ${formData.benefits.includes(benefit.id) ? styles.selected : ''}`}>
-                                        <input type="checkbox" checked={formData.benefits.includes(benefit.id)} onChange={() => toggleBenefit(benefit.id)} />
-                                        <span className={styles.benefitIcon}>{benefit.icon}</span>
-                                        <span className={styles.benefitLabel}>{benefit.label}</span>
-                                    </label>
-                                ))}
+                            <label className="label">Cor Principal</label>
+                            <div className={styles.colorPicker}>
+                                <input type="color" name="primary_color" value={formData.primary_color} onChange={handleChange} className={styles.colorInput} />
+                                <span>{formData.primary_color}</span>
                             </div>
                         </div>
 
                         <div className="form-group">
                             <label className="label">Gargalos Encontrados</label>
-                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
-                                Selecione os desafios identificados no cliente ou adicione personalizados
-                            </p>
                             <div className={styles.benefitsGrid}>
                                 {[
                                     'Perde vendas por demora no atendimento',
@@ -711,98 +584,34 @@ export default function EditProposalPage() {
                                     'Depende 100% do atendimento humano',
                                     'Más experiências com chatbot',
                                 ].map(challenge => (
-                                    <label
-                                        key={challenge}
-                                        className={`${styles.benefitCard} ${formData.challenges.includes(challenge) ? styles.selected : ''}`}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.challenges.includes(challenge)}
-                                            onChange={() => toggleChallenge(challenge)}
-                                        />
+                                    <label key={challenge} className={`${styles.benefitCard} ${formData.challenges.includes(challenge) ? styles.selected : ''}`}>
+                                        <input type="checkbox" checked={formData.challenges.includes(challenge)} onChange={() => toggleChallenge(challenge)} />
                                         <span className={styles.benefitLabel}>{challenge}</span>
                                     </label>
                                 ))}
                             </div>
-
-                            {/* Gargalos customizados */}
-                            <div style={{ marginTop: 'var(--space-4)' }}>
-                                <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
-                                    Gargalos personalizados:
-                                </p>
-                                {formData.challenges.filter(c => ![
-                                    'Perde vendas por demora no atendimento',
-                                    'Atendimento limitado ao horário comercial',
-                                    'Nenhum follow-up com leads que sumiram',
-                                    'Investe em anúncios mas não tem comercial preparado',
-                                    'Atendimento manual sobrecarregado',
-                                    'Perde tempo com lead desqualificado',
-                                    'Depende 100% do atendimento humano',
-                                    'Más experiências com chatbot',
-                                ].includes(c)).map((challenge, index) => (
-                                    <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                                        <input
-                                            type="text"
-                                            className="input"
-                                            value={challenge}
-                                            onChange={(e) => {
-                                                const customChallenges = formData.challenges.filter(c => ![
-                                                    'Perde vendas por demora no atendimento',
-                                                    'Atendimento limitado ao horário comercial',
-                                                    'Nenhum follow-up com leads que sumiram',
-                                                    'Investe em anúncios mas não tem comercial preparado',
-                                                    'Atendimento manual sobrecarregado',
-                                                    'Perde tempo com lead desqualificado',
-                                                    'Depende 100% do atendimento humano',
-                                                    'Más experiências com chatbot',
-                                                ].includes(c));
-                                                const presetChallenges = formData.challenges.filter(c => [
-                                                    'Perde vendas por demora no atendimento',
-                                                    'Atendimento limitado ao horário comercial',
-                                                    'Nenhum follow-up com leads que sumiram',
-                                                    'Investe em anúncios mas não tem comercial preparado',
-                                                    'Atendimento manual sobrecarregado',
-                                                    'Perde tempo com lead desqualificado',
-                                                    'Depende 100% do atendimento humano',
-                                                    'Más experiências com chatbot',
-                                                ].includes(c));
-                                                customChallenges[index] = e.target.value;
-                                                setFormData(prev => ({ ...prev, challenges: [...presetChallenges, ...customChallenges] }));
-                                            }}
-                                            style={{ flex: 1 }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setFormData(prev => ({
-                                                    ...prev,
-                                                    challenges: prev.challenges.filter(c => c !== challenge)
-                                                }));
-                                            }}
-                                            className="btn btn-secondary"
-                                            style={{ padding: '8px 12px' }}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, challenges: [...prev.challenges, ''] }))}
-                                    className="btn btn-secondary"
-                                    style={{ marginTop: 'var(--space-2)' }}
-                                >
-                                    + Adicionar gargalo personalizado
-                                </button>
-                            </div>
                         </div>
 
-                        {/* Comparativo Com IA vs Sem IA */}
-                        <div className="form-group" style={{ marginTop: 'var(--space-6)' }}>
-                            <label className="label">Comparativo: Com Agente de IA</label>
-                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
-                                Liste os benefícios de ter IA (aparece no lado verde)
-                            </p>
+                        <div className="form-group" style={{ marginTop: 'var(--space-4)' }}>
+                            <label className="label">Análise do Diagnóstico (Opcional)</label>
+                            <textarea
+                                name="diagnosis_text"
+                                value={formData.diagnosis_text}
+                                onChange={handleChange}
+                                className="input"
+                                placeholder="Ex: Identificamos que por falta de atendimento na hora que o cliente entra em contato..."
+                                style={{ minHeight: '100px', resize: 'vertical' }}
+                            />
+                            <small className={styles.hint}>Texto que aparecerá no slide de diagnóstico para complementar os gargalos.</small>
+                        </div>
+                    </div>
+
+                    {/* Comparativo Com IA vs Sem IA */}
+                    <div className={styles.section}>
+                        <h3 className={styles.sectionTitle}>🆚 Comparativo</h3>
+
+                        <div className="form-group">
+                            <label className="label">Com Agente de IA</label>
                             {formData.comparison_with_ai.map((item, index) => (
                                 <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
                                     <input
@@ -813,31 +622,14 @@ export default function EditProposalPage() {
                                         placeholder="Ex: Responde em segundos"
                                         style={{ flex: 1 }}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeComparisonItem('comparison_with_ai', index)}
-                                        className="btn btn-secondary"
-                                        style={{ padding: '0 var(--space-3)' }}
-                                    >
-                                        ✕
-                                    </button>
+                                    <button type="button" onClick={() => removeComparisonItem('comparison_with_ai', index)} className="btn btn-secondary" style={{ padding: '0 var(--space-3)' }}>✕</button>
                                 </div>
                             ))}
-                            <button
-                                type="button"
-                                onClick={() => addComparisonItem('comparison_with_ai')}
-                                className="btn btn-secondary"
-                                style={{ marginTop: 'var(--space-2)' }}
-                            >
-                                + Adicionar item
-                            </button>
+                            <button type="button" onClick={() => addComparisonItem('comparison_with_ai')} className="btn btn-secondary">+ Adicionar item</button>
                         </div>
 
                         <div className="form-group" style={{ marginTop: 'var(--space-4)' }}>
-                            <label className="label">Comparativo: Sem Agente de IA</label>
-                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
-                                Liste os problemas de não ter IA (aparece no lado vermelho)
-                            </p>
+                            <label className="label">Sem Agente de IA</label>
                             {formData.comparison_without_ai.map((item, index) => (
                                 <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
                                     <input
@@ -848,102 +640,38 @@ export default function EditProposalPage() {
                                         placeholder="Ex: Demora 1h ou mais"
                                         style={{ flex: 1 }}
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeComparisonItem('comparison_without_ai', index)}
-                                        className="btn btn-secondary"
-                                        style={{ padding: '0 var(--space-3)' }}
-                                    >
-                                        ✕
-                                    </button>
+                                    <button type="button" onClick={() => removeComparisonItem('comparison_without_ai', index)} className="btn btn-secondary" style={{ padding: '0 var(--space-3)' }}>✕</button>
                                 </div>
                             ))}
-                            <button
-                                type="button"
-                                onClick={() => addComparisonItem('comparison_without_ai')}
-                                className="btn btn-secondary"
-                                style={{ marginTop: 'var(--space-2)' }}
-                            >
-                                + Adicionar item
-                            </button>
-                        </div>
-
-                        {/* Dados de Mercado */}
-                        <div className="form-group" style={{ marginTop: 'var(--space-6)' }}>
-                            <label className="label">Dados de Mercado</label>
-                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
-                                Estatísticas para convencer o cliente (texto + destaque em verde)
-                            </p>
-                            {formData.market_stats.map((stat, index) => (
-                                <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)', alignItems: 'center' }}>
-                                    <input
-                                        type="text"
-                                        className="input"
-                                        value={stat.text || ''}
-                                        onChange={(e) => updateMarketStat(index, 'text', e.target.value)}
-                                        placeholder="Ex: Responder em até 1 minuto pode gerar até"
-                                        style={{ flex: 2 }}
-                                    />
-                                    <input
-                                        type="text"
-                                        className="input"
-                                        value={stat.highlight || ''}
-                                        onChange={(e) => updateMarketStat(index, 'highlight', e.target.value)}
-                                        placeholder="391% mais vendas"
-                                        style={{ flex: 1, color: 'var(--brand-accent)' }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeMarketStat(index)}
-                                        className="btn btn-secondary"
-                                        style={{ padding: '0 var(--space-3)' }}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ))}
-                            <button
-                                type="button"
-                                onClick={() => addMarketStat()}
-                                className="btn btn-secondary"
-                                style={{ marginTop: 'var(--space-2)' }}
-                            >
-                                + Adicionar estatística
-                            </button>
+                            <button type="button" onClick={() => addComparisonItem('comparison_without_ai')} className="btn btn-secondary">+ Adicionar item</button>
                         </div>
                     </div>
 
-                    {/* Custos IA (OpenAI) */}
+                    {/* Dados de Mercado */}
                     <div className={styles.section}>
-                        <h3 className={styles.sectionTitle}>🤖 Custos de IA (API OpenAI)</h3>
-                        <div className={styles.gridTwo}>
-                            <div className="form-group">
-                                <label className="label">Custo por Conversa (R$)</label>
+                        <h3 className={styles.sectionTitle}>📊 Dados de Mercado</h3>
+                        {formData.market_stats.map((stat, index) => (
+                            <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)', alignItems: 'center' }}>
                                 <input
-                                    type="number"
-                                    name="cost_per_conversation"
-                                    value={formData.cost_per_conversation}
-                                    onChange={handleChange}
+                                    type="text"
                                     className="input"
-                                    placeholder="Ex: 0.15"
-                                    step="0.01"
+                                    value={stat.text}
+                                    onChange={(e) => updateMarketStat(index, 'text', e.target.value)}
+                                    placeholder="Texto normal..."
+                                    style={{ flex: 2 }}
                                 />
-                                <p className={styles.inputHint}>Valor aproximado por atendimento completo</p>
-                            </div>
-                            <div className="form-group">
-                                <label className="label">Estimativa Mensal (R$)</label>
                                 <input
-                                    type="number"
-                                    name="estimated_monthly_cost"
-                                    value={formData.estimated_monthly_cost}
-                                    onChange={handleChange}
+                                    type="text"
                                     className="input"
-                                    placeholder="Ex: 150.00"
-                                    step="0.01"
+                                    value={stat.highlight}
+                                    onChange={(e) => updateMarketStat(index, 'highlight', e.target.value)}
+                                    placeholder="Destaque verde"
+                                    style={{ flex: 1, color: 'var(--brand-accent)' }}
                                 />
-                                <p className={styles.inputHint}>Baseado no volume de leads recebidos</p>
+                                <button type="button" onClick={() => removeMarketStat(index)} className="btn btn-secondary" style={{ padding: '0 var(--space-3)' }}>✕</button>
                             </div>
-                        </div>
+                        ))}
+                        <button type="button" onClick={() => addMarketStat()} className="btn btn-secondary">+ Adicionar estatística</button>
                     </div>
 
                     {/* Cronograma de Entrega */}
@@ -951,22 +679,12 @@ export default function EditProposalPage() {
                         <h3 className={styles.sectionTitle}>📅 Cronograma de Entrega</h3>
                         <div className={styles.gridTwo}>
                             <div className="form-group">
-                                <label className="label">Análise de Processos (dias)</label>
+                                <label className="label">Análise (dias)</label>
                                 <input type="number" name="roadmap_analysis_days" value={formData.roadmap_analysis_days} onChange={handleChange} className="input" min="1" />
                             </div>
                             <div className="form-group">
-                                <label className="label">Aprovação dos Agentes (dias)</label>
-                                <input type="number" name="roadmap_approval_days" value={formData.roadmap_approval_days} onChange={handleChange} className="input" min="1" />
-                            </div>
-                        </div>
-                        <div className={styles.gridTwo}>
-                            <div className="form-group">
-                                <label className="label">Desenvolvimento IA (dias)</label>
+                                <label className="label">Setup (dias)</label>
                                 <input type="number" name="roadmap_development_days" value={formData.roadmap_development_days} onChange={handleChange} className="input" min="1" />
-                            </div>
-                            <div className="form-group">
-                                <label className="label">Testes e Implementação (dias)</label>
-                                <input type="number" name="roadmap_testing_days" value={formData.roadmap_testing_days} onChange={handleChange} className="input" min="1" />
                             </div>
                         </div>
                         <div style={{ padding: 'var(--space-4)', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
