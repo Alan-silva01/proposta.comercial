@@ -49,7 +49,7 @@ export default function EditProposal() {
         price_total: 0,
         price_upfront: 0,
         installments: '1',
-        payment_method: 'pix_cartao',
+        implementation_payment_method: 'pix_cartao',
         has_maintenance: true,
         maintenance_price: 297,
         maintenance_payment_method: 'pix_cartao',
@@ -202,10 +202,12 @@ export default function EditProposal() {
         e.preventDefault();
         setSaving(true);
 
+        const { payment_method, ...dataToSave } = formData;
+
         const { error } = await supabase
             .from('proposals')
             .update({
-                ...formData,
+                ...dataToSave,
                 updated_at: new Date().toISOString()
             })
             .eq('id', id);
