@@ -158,48 +158,47 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--brand-dark-3);
-    color: var(--primary-color);
-    padding: 4px 12px;
+    background: rgba(191, 255, 0, 0.1);
+    color: var(--brand-neon);
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border: 1px solid var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    font-weight: 800;
+    border: 1px solid var(--brand-neon);
+    box-shadow: 0 0 15px rgba(191, 255, 0, 0.2);
     white-space: nowrap;
     opacity: 0;
     transition: opacity 0.3s ease 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     z-index: 10;
 }
-
-/* States */
-.normal {}
-
-.ai {}
-
-.collapsing {}
-
-.destroyed {}
 
 /* Position metrics for the "Hoje" funnel on the left */
 .normal .funnelMetric,
 .collapsing .funnelMetric,
 .destroyed .funnelMetric {
-    left: -120px;
+    left: -140px;
+}
+
+.normal .funnelMetric::after,
+.collapsing .funnelMetric::after,
+.destroyed .funnelMetric::after {
+    content: "←";
+    font-size: 1.2rem;
+    margin-left: 4px;
 }
 
 /* Position metrics for the "AI" funnel on the right */
 .ai .funnelMetric {
-    right: -120px;
+    right: -140px;
 }
 
-.metricArrow {
-    font-size: 1rem;
-    line-height: 1;
-    margin-top: -2px;
+.ai .funnelMetric::before {
+    content: "→";
+    font-size: 1.2rem;
+    margin-right: 4px;
 }
 
 @media (max-width: 1200px) {
@@ -214,6 +213,13 @@
 
     .funnelLayer.visible .funnelMetric {
         opacity: 1;
+    }
+
+    .ai .funnelMetric::before,
+    .normal .funnelMetric::after,
+    .collapsing .funnelMetric::after,
+    .destroyed .funnelMetric::after {
+        display: none;
     }
 }
 

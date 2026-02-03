@@ -205,7 +205,6 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                 </div>
                                 {layer.metric && (
                                     <div className={funnelStyles.funnelMetric}>
-                                        <span className={funnelStyles.metricArrow}>↓</span>
                                         {layer.metric}
                                     </div>
                                 )}
@@ -227,7 +226,6 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                 </div>
                                 {layer.metric && (
                                     <div className={funnelStyles.funnelMetric}>
-                                        <span className={funnelStyles.metricArrow}>↓</span>
                                         {layer.metric}
                                     </div>
                                 )}
