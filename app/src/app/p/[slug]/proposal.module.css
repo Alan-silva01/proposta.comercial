@@ -107,11 +107,11 @@
     display: inline-block;
     width: 1.5px;
     height: 1.25em;
-    background-color: var(--primary-color);
+    background-color: var(--brand-neon);
     margin-left: 3px;
     animation: blink 0.7s step-end infinite;
     vertical-align: middle;
-    box-shadow: 0 0 6px var(--primary-color);
+    box-shadow: 0 0 6px var(--brand-neon);
 }
 
 @keyframes blink {
