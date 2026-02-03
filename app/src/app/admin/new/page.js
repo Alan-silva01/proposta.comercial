@@ -818,9 +818,9 @@ export default function NewProposalPage() {
                             </div>
 
                             <div className="form-group">
-                                <label className="label">Desafios Identificados (opcional)</label>
+                                <label className="label">Gargalos Encontrados (opcional)</label>
                                 <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
-                                    Selecione os desafios que você identificou no cliente
+                                    Selecione os desafios identificados no cliente ou adicione personalizados
                                 </p>
                                 <div className={styles.benefitsGrid}>
                                     {[
@@ -845,6 +845,78 @@ export default function NewProposalPage() {
                                             <span className={styles.benefitLabel}>{challenge}</span>
                                         </label>
                                     ))}
+                                </div>
+
+                                {/* Gargalos customizados */}
+                                <div style={{ marginTop: 'var(--space-4)' }}>
+                                    <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
+                                        Gargalos personalizados:
+                                    </p>
+                                    {formData.challenges.filter(c => ![
+                                        'Perde vendas por demora no atendimento',
+                                        'Atendimento limitado ao horário comercial',
+                                        'Nenhum follow-up com leads que sumiram',
+                                        'Investe em anúncios mas não tem comercial preparado',
+                                        'Atendimento manual sobrecarregado',
+                                        'Perde tempo com lead desqualificado',
+                                        'Depende 100% do atendimento humano',
+                                        'Más experiências com chatbot',
+                                    ].includes(c)).map((challenge, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                            <input
+                                                type="text"
+                                                className="input"
+                                                value={challenge}
+                                                onChange={(e) => {
+                                                    const customChallenges = formData.challenges.filter(c => ![
+                                                        'Perde vendas por demora no atendimento',
+                                                        'Atendimento limitado ao horário comercial',
+                                                        'Nenhum follow-up com leads que sumiram',
+                                                        'Investe em anúncios mas não tem comercial preparado',
+                                                        'Atendimento manual sobrecarregado',
+                                                        'Perde tempo com lead desqualificado',
+                                                        'Depende 100% do atendimento humano',
+                                                        'Más experiências com chatbot',
+                                                    ].includes(c));
+                                                    const presetChallenges = formData.challenges.filter(c => [
+                                                        'Perde vendas por demora no atendimento',
+                                                        'Atendimento limitado ao horário comercial',
+                                                        'Nenhum follow-up com leads que sumiram',
+                                                        'Investe em anúncios mas não tem comercial preparado',
+                                                        'Atendimento manual sobrecarregado',
+                                                        'Perde tempo com lead desqualificado',
+                                                        'Depende 100% do atendimento humano',
+                                                        'Más experiências com chatbot',
+                                                    ].includes(c));
+                                                    customChallenges[index] = e.target.value;
+                                                    setFormData(prev => ({ ...prev, challenges: [...presetChallenges, ...customChallenges] }));
+                                                }}
+                                                placeholder="Digite o gargalo personalizado..."
+                                                style={{ flex: 1 }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        challenges: prev.challenges.filter(c => c !== challenge)
+                                                    }));
+                                                }}
+                                                className="btn btn-secondary"
+                                                style={{ padding: '8px 12px' }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, challenges: [...prev.challenges, ''] }))}
+                                        className="btn btn-secondary"
+                                        style={{ marginTop: 'var(--space-2)' }}
+                                    >
+                                        + Adicionar gargalo personalizado
+                                    </button>
                                 </div>
                             </div>
 
