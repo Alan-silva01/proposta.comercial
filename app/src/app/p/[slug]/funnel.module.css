@@ -156,7 +156,6 @@
 
 .funnelMetric {
     position: absolute;
-    right: -130px;
     top: 50%;
     transform: translateY(-50%);
     background: var(--brand-dark-3);
@@ -173,6 +172,28 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    z-index: 10;
+}
+
+/* States */
+.normal {}
+
+.ai {}
+
+.collapsing {}
+
+.destroyed {}
+
+/* Position metrics for the "Hoje" funnel on the left */
+.normal .funnelMetric,
+.collapsing .funnelMetric,
+.destroyed .funnelMetric {
+    left: -120px;
+}
+
+/* Position metrics for the "AI" funnel on the right */
+.ai .funnelMetric {
+    right: -120px;
 }
 
 .metricArrow {
@@ -181,9 +202,18 @@
     margin-top: -2px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
     .funnelMetric {
-        display: none;
+        position: static;
+        transform: none;
+        margin: 4px auto 8px;
+        opacity: 0;
+        justify-content: center;
+        width: fit-content;
+    }
+
+    .funnelLayer.visible .funnelMetric {
+        opacity: 1;
     }
 }
 

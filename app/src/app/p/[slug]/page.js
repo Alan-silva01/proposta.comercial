@@ -202,15 +202,13 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
                                         <span className={funnelStyles.funnelLabel}>{layer.label}</span>
                                     </div>
-                                    <div className={funnelStyles.funnelMetric}>
-                                        {layer.metric && (
-                                            <>
-                                                <span className={funnelStyles.metricArrow}>↓</span>
-                                                {layer.metric}
-                                            </>
-                                        )}
-                                    </div>
                                 </div>
+                                {layer.metric && (
+                                    <div className={funnelStyles.funnelMetric}>
+                                        <span className={funnelStyles.metricArrow}>↓</span>
+                                        {layer.metric}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -226,15 +224,13 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
                                         <span className={funnelStyles.funnelLabel}>{layer.label}</span>
                                     </div>
-                                    <div className={funnelStyles.funnelMetric}>
-                                        {layer.metric && (
-                                            <>
-                                                <span className={funnelStyles.metricArrow}>↓</span>
-                                                {layer.metric}
-                                            </>
-                                        )}
-                                    </div>
                                 </div>
+                                {layer.metric && (
+                                    <div className={funnelStyles.funnelMetric}>
+                                        <span className={funnelStyles.metricArrow}>↓</span>
+                                        {layer.metric}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
