@@ -127,10 +127,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
     const isScheduling = proposal.funnel_type === 'scheduling';
 
     const layersToday = [
-        { label: 'Leads', value: proposal.leads_received, metric: '100%' },
+        { label: 'Leads', value: proposal.leads_received, metric: '' },
         { label: 'Respondidos', value: proposal.leads_responded, metric: formatPercent((proposal.leads_responded / proposal.leads_received) * 100) },
-        ...(isScheduling ? [{ label: 'Agendados', value: proposal.leads_scheduled || 0, metric: formatPercent((proposal.leads_scheduled / proposal.leads_received) * 100) }] : []),
-        { label: 'Vendas', value: proposal.leads_converted, metric: formatPercent((proposal.leads_converted / proposal.leads_received) * 100) }
+        ...(isScheduling ? [{ label: 'Agendados', value: proposal.leads_scheduled || 0, metric: formatPercent((proposal.leads_scheduled / proposal.leads_responded) * 100) }] : []),
+        {
+            label: 'Vendas',
+            value: proposal.leads_converted,
+            metric: formatPercent((proposal.leads_converted / (isScheduling ? (proposal.leads_scheduled || 1) : (proposal.leads_responded || 1))) * 100)
+        }
     ];
 
     const projectedResponded = Math.round(proposal.leads_received * (proposal.projected_response_rate / 100));
@@ -139,10 +143,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
     const projectedSales = roi?.projectedConverted || 0;
 
     const layersAI = [
-        { label: 'Leads', value: proposal.leads_received, metric: '100%' },
+        { label: 'Leads', value: proposal.leads_received, metric: '' },
         { label: 'Respondidos', value: projectedResponded, metric: formatPercent(proposal.projected_response_rate) },
         ...(isScheduling ? [{ label: 'Agendados', value: projectedScheduled, metric: formatPercent(schedulingConversionRate) }] : []),
-        { label: 'Vendas', value: projectedSales, metric: formatPercent((projectedSales / proposal.leads_received) * 100) }
+        {
+            label: 'Vendas',
+            value: projectedSales,
+            metric: formatPercent((projectedSales / (isScheduling ? (projectedScheduled || 1) : (projectedResponded || 1))) * 100)
+        }
     ];
 
     useEffect(() => {
@@ -194,7 +202,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
                                         <span className={funnelStyles.funnelLabel}>{layer.label}</span>
                                     </div>
-                                    <div className={funnelStyles.funnelMetric}>{layer.metric}</div>
+                                    <div className={funnelStyles.funnelMetric}>
+                                        {layer.metric && (
+                                            <>
+                                                <span className={funnelStyles.metricArrow}>↓</span>
+                                                {layer.metric}
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -211,7 +226,14 @@ function FunnelComparison({ proposal, roi, formatCurrency, formatPercent, isActi
                                         <span className={funnelStyles.funnelValue}>{layer.value}</span>
                                         <span className={funnelStyles.funnelLabel}>{layer.label}</span>
                                     </div>
-                                    <div className={funnelStyles.funnelMetric}>{layer.metric}</div>
+                                    <div className={funnelStyles.funnelMetric}>
+                                        {layer.metric && (
+                                            <>
+                                                <span className={funnelStyles.metricArrow}>↓</span>
+                                                {layer.metric}
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}

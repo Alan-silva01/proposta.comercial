@@ -170,6 +170,15 @@
     white-space: nowrap;
     opacity: 0;
     transition: opacity 0.3s ease 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.metricArrow {
+    font-size: 1rem;
+    line-height: 1;
+    margin-top: -2px;
 }
 
 @media (max-width: 1000px) {
