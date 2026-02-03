@@ -176,7 +176,8 @@
 /* Section Controls */
 .sectionHeader {
     text-align: center;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-10);
+    flex-shrink: 0;
 }
 
 .sectionTag {
@@ -267,19 +268,23 @@
     font-weight: bold;
 }
 
-/* Benefits Grid */
+/* Benefits Flex Grid */
 .benefitsGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-6);
+    justify-content: center;
+    width: 100%;
 }
 
 .benefitCard {
     background: var(--brand-dark-3);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-xl);
-    padding: var(--space-10);
+    padding: var(--space-8);
     transition: all 0.3s ease;
+    flex: 1 1 320px;
+    max-width: 380px;
 }
 
 .benefitCard:hover {
