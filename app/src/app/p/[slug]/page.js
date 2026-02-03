@@ -524,7 +524,7 @@ export default function ProposalPage() {
                                     <span className={styles.revenueColTag}>Cenário Atual</span>
                                     <div className={styles.revenueMainValue}>{formatCurrency(roi?.currentRevenue)}</div>
                                     <div className={styles.revenueSubDetail}>Conversão: {formatPercent(currentConversionRate)}</div>
-                                    <div className={styles.revenueSubDetail}>{proposal.leads_received} leads/mês</div>
+                                    <div className={styles.revenueSubDetail}>{proposal.leads_responded || 0} leads respondidos/mês</div>
                                 </div>
 
                                 <div className={styles.revenueVS}>VS</div>
@@ -537,7 +537,7 @@ export default function ProposalPage() {
                                             ? formatPercent((roi.projectedConverted / roi.projectedLeadsResponded) * 100)
                                             : formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}
                                     </div>
-                                    <div className={styles.revenueSubDetail}>{proposal.leads_received} leads/mês</div>
+                                    <div className={styles.revenueSubDetail}>{roi?.projectedLeadsResponded || proposal.leads_received} leads respondidos/mês</div>
                                 </div>
                             </div>
 
