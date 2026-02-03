@@ -318,7 +318,7 @@ export default function ProposalPage() {
     const [roi, setRoi] = useState(null);
     const [currentSlide, setCurrentSlide] = useState(0);
 
-    const slidesCount = 8; // Hero, Diagnosis, Solution, Funnel, ROI, Roadmap, Pricing, CTA
+    const slidesCount = 9; // Hero, Solution, Diagnosis, Funnel, Impacto, Potencial, Roadmap, Pricing, CTA
 
     useEffect(() => {
         fetchProposal();
@@ -493,30 +493,85 @@ export default function ProposalPage() {
                     </div>
                 </div>
 
-                {/* SLIDE 5: ROI PROJECTION (With Animations) */}
+                {/* SLIDE 5: REVENUE COMPARISON (IMPACTO) */}
                 <div className={`${slideStyles.slide} ${currentSlide === 4 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
                     <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 4} className={styles.roiSection}>
+                        <RevealSection isActive={currentSlide === 4}>
                             <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag}>Potencial</span>
-                                <h2>Projeção de Resultado</h2>
+                                <span className={styles.sectionTag}>Viabilidade Final</span>
+                                <h2>Impacto Financeiro</h2>
+                            </div>
+
+                            <div className={styles.revenueComparisonGrid}>
+                                <div className={styles.revenueCol}>
+                                    <span className={styles.revenueColTag}>Cenário Atual</span>
+                                    <div className={styles.revenueMainValue}>{formatCurrency(roi?.currentRevenue)}</div>
+                                    <div className={styles.revenueSubDetail}>Conversão: {formatPercent(currentConversionRate)}</div>
+                                    <div className={styles.revenueSubDetail}>{proposal.leads_received} leads/mês</div>
+                                </div>
+
+                                <div className={styles.revenueVS}>VS</div>
+
+                                <div className={styles.revenueCol} style={{ border: '1px solid var(--brand-neon)' }}>
+                                    <span className={styles.revenueColTag} style={{ color: 'var(--brand-neon)' }}>Com Nossa IA</span>
+                                    <div className={styles.revenueMainValue}>{formatCurrency(roi?.projectedRevenue)}</div>
+                                    <div className={styles.revenueSubDetail}>Nova Conversão: {formatPercent(proposal.projected_conversion_rate || (currentConversionRate * 1.5))}</div>
+                                    <div className={styles.revenueSubDetail}>Atendimento {conservative ? 'Conservador' : '24/7 Total'}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                <button
+                                    onClick={() => setConservative(!conservative)}
+                                    className={styles.conservativeToggle}
+                                    style={{
+                                        background: conservative ? 'var(--brand-neon)' : 'transparent',
+                                        color: conservative ? 'black' : 'var(--brand-neon)',
+                                        border: '1px solid var(--brand-neon)',
+                                        padding: '12px 24px',
+                                        borderRadius: '30px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
+                                </button>
+                                <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--brand-muted)' }}>
+                                    {conservative
+                                        ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
+                                        : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
+                                </p>
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
+
+
+                {/* SLIDE 6: ROI PROJECTION (Potencial) */}
+                <div className={`${slideStyles.slide} ${currentSlide === 5 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 5} className={styles.roiSection}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag}>Potencial Anual</span>
+                                <h2>Crescimento Estimado</h2>
                             </div>
 
                             <div className={styles.roiHighlight}>
                                 <div className={styles.roiNumber}>
                                     <span className={styles.roiPlus}>+</span>
                                     <span className={styles.roiValue}>
-                                        <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} isActive={currentSlide === 4} />
+                                        <AnimatedCounter value={roi?.revenueIncrease || 0} duration={2500} isActive={currentSlide === 5} />
                                     </span>
                                 </div>
-                                <span className={styles.roiLabel}>Faturamento adicional mensal</span>
+                                <span className={styles.roiLabel}>Faturamento adicional mensal {conservative && '(Conservador)'}</span>
                             </div>
 
                             <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '40px' }}>
                                 <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`} style={{ background: 'var(--brand-dark-2)', border: '1px solid var(--brand-neon)' }}>
-                                    <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>Potencial Anual com IA</span>
+                                    <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>ROI Estimado em 12 Meses</span>
                                     <ScratchCard>
-                                        <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.projectedRevenue * 12)}</span>
+                                        <span className={scratchStyles.revenueCardValue} style={{ color: 'var(--brand-neon)' }}>{formatCurrency(roi?.revenueIncrease * 12)}</span>
                                     </ScratchCard>
                                 </div>
                             </div>
@@ -524,47 +579,57 @@ export default function ProposalPage() {
                     </div>
                 </div>
 
-                {/* SLIDE 6: ROADMAP */}
-                <div className={`${slideStyles.slide} ${currentSlide === 5 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
+                {/* SLIDE 7: ROADMAP */}
+                <div className={`${slideStyles.slide} ${currentSlide === 6 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
                     <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 5} className={styles.roadmapSection}>
+                        <RevealSection isActive={currentSlide === 6} className={styles.roadmapSection}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTag}>Cronograma</span>
                                 <h2>Plano de Entrega</h2>
                             </div>
-                            <div className={styles.roadmapContainer}>
-                                <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', marginBottom: '20px', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
-                                    <div></div>
-                                    <div>Sem 1</div><div>Sem 2</div><div>Sem 3</div><div>Sem 4</div>
-                                </div>
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Análise</div>
-                                    <div className={styles.roadmapBar} style={{ gridColumn: '2 / 3' }}></div>
-                                </div>
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Setup</div>
-                                    <div className={styles.roadmapBar} style={{ gridColumn: '2 / 4' }}></div>
-                                </div>
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Testes</div>
-                                    <div className={styles.roadmapBar} style={{ gridColumn: '4 / 5' }}></div>
-                                </div>
-                                <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(4, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
-                                    <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Go-Live</div>
-                                    <div className={styles.roadmapBar} style={{ gridColumn: '5 / 6' }}></div>
-                                </div>
-                            </div>
-                            <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                                <span style={{ fontSize: '1.2rem', color: 'var(--brand-muted)' }}>Prazo estimado: <strong style={{ color: 'var(--brand-neon)' }}>30 dias</strong> para operação total.</span>
-                            </div>
+                            {(() => {
+                                const totalDays = proposal.delivery_days || 30;
+                                const totalWeeks = Math.ceil(totalDays / 7);
+                                return (
+                                    <>
+                                        <div className={styles.roadmapContainer}>
+                                            <div className={styles.roadmapHeader} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', marginBottom: '20px', color: 'var(--brand-muted)', fontSize: '0.8rem' }}>
+                                                <div></div>
+                                                {Array.from({ length: totalWeeks }).map((_, i) => (
+                                                    <div key={i}>Sem {i + 1}</div>
+                                                ))}
+                                            </div>
+                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Análise</div>
+                                                <div className={styles.roadmapBar} style={{ gridColumn: `2 / 3` }}></div>
+                                            </div>
+                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Setup</div>
+                                                <div className={styles.roadmapBar} style={{ gridColumn: `2 / ${Math.max(3, Math.ceil(totalWeeks * 0.6))}` }}></div>
+                                            </div>
+                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Testes</div>
+                                                <div className={styles.roadmapBar} style={{ gridColumn: `${Math.ceil(totalWeeks * 0.6)} / ${totalWeeks}` }}></div>
+                                            </div>
+                                            <div className={styles.roadmapRow} style={{ gridTemplateColumns: `180px repeat(${totalWeeks}, 1fr)`, display: 'grid', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div className={styles.roadmapPhaseLabel} style={{ fontWeight: 'bold' }}>Go-Live</div>
+                                                <div className={styles.roadmapBar} style={{ gridColumn: `${totalWeeks} / ${totalWeeks + 1}` }}></div>
+                                            </div>
+                                        </div>
+                                        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                                            <span style={{ fontSize: '1.2rem', color: 'var(--brand-muted)' }}>Prazo estimado: <strong style={{ color: 'var(--brand-neon)' }}>{totalDays} dias</strong> para operação total.</span>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </RevealSection>
                     </div>
                 </div>
 
-                {/* SLIDE 7: INVESTMENT */}
-                <div className={`${slideStyles.slide} ${currentSlide === 6 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                {/* SLIDE 8: INVESTMENT */}
+                <div className={`${slideStyles.slide} ${currentSlide === 7 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
                     <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 6} className={styles.pricingSection}>
+                        <RevealSection isActive={currentSlide === 7} className={styles.pricingSection}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTag}>Investimento</span>
                                 <h2>Condições Especiais</h2>
@@ -601,10 +666,10 @@ export default function ProposalPage() {
                     </div>
                 </div>
 
-                {/* SLIDE 8: CTA */}
-                <div className={`${slideStyles.slide} ${currentSlide === 7 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                {/* SLIDE 9: CTA */}
+                <div className={`${slideStyles.slide} ${currentSlide === 8 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
                     <div className={slideStyles.slideContent} style={{ textAlign: 'center' }}>
-                        <RevealSection isActive={currentSlide === 7}>
+                        <RevealSection isActive={currentSlide === 8}>
                             <h2 style={{ fontSize: '4.5rem', fontWeight: '900', marginBottom: '2rem', lineHeight: '1.1' }}>Vamos transformar seus resultados?</h2>
                             <p style={{ fontSize: '1.5rem', color: 'var(--brand-muted)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>
                                 Esta proposta está alinhada com os objetivos da <strong style={{ color: 'white' }}>{proposal.company_name}</strong>?
@@ -625,7 +690,6 @@ export default function ProposalPage() {
                         </RevealSection>
                     </div>
                 </div>
-
             </div>
         </div>
     );

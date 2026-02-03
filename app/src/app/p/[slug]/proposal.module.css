@@ -422,3 +422,86 @@
 .revealActive {
     animation: fadeIn 0.8s ease forwards;
 }
+
+/* Revenue Comparison Slide */
+.revenueComparisonGrid {
+    display: flex;
+    gap: 40px;
+    align-items: stretch;
+    margin-top: 40px;
+    justify-content: center;
+}
+
+.revenueCol {
+    flex: 1;
+    max-width: 400px;
+    background: var(--brand-dark-2);
+    padding: 40px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.5s ease;
+}
+
+.revenueColTag {
+    font-size: 0.9rem;
+    color: var(--brand-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.revenueMainValue {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 20px;
+}
+
+.revenueSubDetail {
+    font-size: 1.1rem;
+    color: var(--brand-muted);
+    margin-bottom: 8px;
+}
+
+.revenueVS {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--brand-muted);
+}
+
+.conservativeToggle {
+    transition: all 0.3s ease;
+}
+
+.conservativeToggle:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+/* Roadmap Grid Customization */
+.roadmapContainer {
+    max-width: 900px;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.roadmapPhaseLabel {
+    color: var(--brand-muted);
+    font-size: 0.95rem;
+}
+
+.pricingRoi {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(191, 255, 0, 0.05);
+    border-radius: 12px;
+    color: var(--brand-muted);
+    border: 1px dashed rgba(191, 255, 0, 0.2);
+    text-align: center;
+}
