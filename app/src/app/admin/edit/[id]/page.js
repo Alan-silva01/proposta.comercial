@@ -156,6 +156,15 @@ export default function EditProposalPage() {
         }));
     }
 
+    function toggleChallenge(challenge) {
+        setFormData(prev => ({
+            ...prev,
+            challenges: prev.challenges.includes(challenge)
+                ? prev.challenges.filter(c => c !== challenge)
+                : [...prev.challenges, challenge],
+        }));
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setSaving(true);
@@ -529,6 +538,37 @@ export default function EditProposalPage() {
                                         <input type="checkbox" checked={formData.benefits.includes(benefit.id)} onChange={() => toggleBenefit(benefit.id)} />
                                         <span className={styles.benefitIcon}>{benefit.icon}</span>
                                         <span className={styles.benefitLabel}>{benefit.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="label">Gargalos Encontrados</label>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                Selecione os desafios identificados no cliente
+                            </p>
+                            <div className={styles.benefitsGrid}>
+                                {[
+                                    'Perde vendas por demora no atendimento',
+                                    'Atendimento limitado ao horário comercial',
+                                    'Nenhum follow-up com leads que sumiram',
+                                    'Investe em anúncios mas não tem comercial preparado',
+                                    'Atendimento manual sobrecarregado',
+                                    'Perde tempo com lead desqualificado',
+                                    'Depende 100% do atendimento humano',
+                                    'Más experiências com chatbot',
+                                ].map(challenge => (
+                                    <label
+                                        key={challenge}
+                                        className={`${styles.benefitCard} ${formData.challenges.includes(challenge) ? styles.selected : ''}`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.challenges.includes(challenge)}
+                                            onChange={() => toggleChallenge(challenge)}
+                                        />
+                                        <span className={styles.benefitLabel}>{challenge}</span>
                                     </label>
                                 ))}
                             </div>
