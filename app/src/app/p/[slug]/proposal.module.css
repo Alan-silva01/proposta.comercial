@@ -300,7 +300,7 @@
 .roiHighlight {
     background: var(--brand-dark-3);
     border-radius: var(--radius-2xl);
-    padding: var(--space-16);
+    padding: var(--space-10);
     text-align: center;
     border: 1px solid var(--brand-neon);
     box-shadow: var(--shadow-neon);
@@ -314,13 +314,13 @@
 }
 
 .roiPlus {
-    font-size: 4rem;
+    font-size: 3rem;
     color: var(--brand-neon);
     font-weight: 900;
 }
 
 .roiValue {
-    font-size: 6rem;
+    font-size: 4.5rem;
     color: var(--brand-light);
     font-weight: 900;
 }
@@ -436,7 +436,7 @@
     flex: 1;
     max-width: 400px;
     background: var(--brand-dark-2);
-    padding: 40px;
+    padding: 30px;
     border-radius: 24px;
     text-align: center;
     border: 1px solid var(--border-subtle);
@@ -456,7 +456,7 @@
 }
 
 .revenueMainValue {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 900;
     margin-bottom: 20px;
 }

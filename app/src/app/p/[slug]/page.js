@@ -540,7 +540,7 @@ export default function ProposalPage() {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                            <div style={{ marginTop: '30px', textAlign: 'center' }}>
                                 <button
                                     onClick={() => setConservative(!conservative)}
                                     className={styles.conservativeToggle}
@@ -557,7 +557,7 @@ export default function ProposalPage() {
                                 >
                                     {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
                                 </button>
-                                <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--brand-muted)' }}>
+                                <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
                                     {conservative
                                         ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
                                         : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
@@ -587,7 +587,7 @@ export default function ProposalPage() {
                                 <span className={styles.roiLabel}>Faturamento adicional mensal {conservative && '(Conservador)'}</span>
                             </div>
 
-                            <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '40px' }}>
+                            <div className={scratchStyles.annualRevenueGrid} style={{ marginTop: '24px' }}>
                                 <div className={`${scratchStyles.revenueCard} ${scratchStyles.highlight}`} style={{ background: 'var(--brand-dark-2)', border: '1px solid var(--brand-neon)' }}>
                                     <span className={scratchStyles.revenueCardTitle} style={{ color: 'var(--brand-muted)' }}>ROI Estimado em 12 Meses</span>
                                     <ScratchCard>
@@ -596,7 +596,7 @@ export default function ProposalPage() {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                            <div style={{ marginTop: '24px', textAlign: 'center' }}>
                                 <button
                                     onClick={() => setConservative(!conservative)}
                                     className={styles.conservativeToggle}
@@ -613,7 +613,7 @@ export default function ProposalPage() {
                                 >
                                     {conservative ? '↩ Ver Projeção Total' : '✂ Ver Projeção Conservadora (-50%)'}
                                 </button>
-                                <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--brand-muted)' }}>
+                                <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--brand-muted)' }}>
                                     {conservative
                                         ? 'Exibindo estimativa com apenas 50% do ganho real projetado.'
                                         : 'Baseado em atendimento instantâneo e recuperação de 100% dos leads.'}
