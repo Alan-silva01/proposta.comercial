@@ -55,9 +55,11 @@ export default function EditProposalPage() {
         price_upfront: '',
         installments: '1',
         implementation_payment_method: 'pix_cartao',
+        implementation_features: [],
         has_maintenance: false,
         maintenance_price: '',
         maintenance_description: '',
+        maintenance_features: [],
         maintenance_payment_method: 'pix_cartao',
         // Roadmap
         roadmap_analysis_days: '7',
@@ -115,9 +117,11 @@ export default function EditProposalPage() {
             price_upfront: data.price_upfront?.toString() || '',
             installments: data.installments?.toString() || '1',
             implementation_payment_method: data.implementation_payment_method || 'pix_cartao',
+            implementation_features: data.implementation_features || ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias'],
             has_maintenance: data.has_maintenance || false,
             maintenance_price: data.maintenance_price?.toString() || '',
             maintenance_description: data.maintenance_description || '',
+            maintenance_features: data.maintenance_features || ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais'],
             maintenance_payment_method: data.maintenance_payment_method || 'pix_cartao',
             // Roadmap
             roadmap_analysis_days: data.roadmap_analysis_days?.toString() || '7',
@@ -211,6 +215,28 @@ export default function EditProposalPage() {
         }));
     }
 
+    // Funções para Implementation Features
+    function updateFeature(field, index, value) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: prev[field].map((item, i) => i === index ? value : item),
+        }));
+    }
+
+    function addFeature(field) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: [...prev[field], ''],
+        }));
+    }
+
+    function removeFeature(field, index) {
+        setFormData(prev => ({
+            ...prev,
+            [field]: prev[field].filter((_, i) => i !== index),
+        }));
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setSaving(true);
@@ -234,8 +260,10 @@ export default function EditProposalPage() {
             price_upfront: formData.price_upfront ? parseFloat(formData.price_upfront) : null,
             installments: parseInt(formData.installments) || 1,
             implementation_payment_method: formData.implementation_payment_method,
+            implementation_features: formData.implementation_features.filter(f => f.trim() !== ''),
             has_maintenance: formData.has_maintenance,
             maintenance_price: formData.has_maintenance ? parseFloat(formData.maintenance_price) || 0 : null,
+            maintenance_features: formData.has_maintenance ? formData.maintenance_features.filter(f => f.trim() !== '') : [],
             maintenance_description: formData.has_maintenance ? formData.maintenance_description : null,
             maintenance_payment_method: formData.has_maintenance ? formData.maintenance_payment_method : null,
             // Roadmap
@@ -457,6 +485,42 @@ export default function EditProposalPage() {
                                 </select>
                             </div>
                         </div>
+
+                        {/* Itens inclusos na Implementação */}
+                        <div className="form-group" style={{ marginTop: 'var(--space-4)' }}>
+                            <label className="label">Itens Inclusos na Implementação</label>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                O que está incluído no valor de implementação
+                            </p>
+                            {formData.implementation_features.map((item, index) => (
+                                <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={item}
+                                        onChange={(e) => updateFeature('implementation_features', index, e.target.value)}
+                                        placeholder="Ex: Configuração Total"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeFeature('implementation_features', index)}
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0 var(--space-3)' }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addFeature('implementation_features')}
+                                className="btn btn-secondary"
+                                style={{ marginTop: 'var(--space-2)' }}
+                            >
+                                + Adicionar item
+                            </button>
+                        </div>
                     </div>
 
                     {/* Manutenção */}
@@ -503,15 +567,41 @@ export default function EditProposalPage() {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="form-group">
-                                    <label className="label">O que está incluso</label>
-                                    <textarea
-                                        name="maintenance_description"
-                                        value={formData.maintenance_description}
-                                        onChange={handleChange}
-                                        className="input"
-                                        rows={3}
-                                    />
+
+                                {/* Itens inclusos na Manutenção */}
+                                <div className="form-group" style={{ marginTop: 'var(--space-4)' }}>
+                                    <label className="label">Itens Inclusos na Manutenção</label>
+                                    <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-3)', fontSize: 'var(--text-sm)' }}>
+                                        O que está incluído na manutenção mensal
+                                    </p>
+                                    {formData.maintenance_features.map((item, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                            <input
+                                                type="text"
+                                                className="input"
+                                                value={item}
+                                                onChange={(e) => updateFeature('maintenance_features', index, e.target.value)}
+                                                placeholder="Ex: Manutenção contínua"
+                                                style={{ flex: 1 }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeFeature('maintenance_features', index)}
+                                                className="btn btn-secondary"
+                                                style={{ padding: '0 var(--space-3)' }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => addFeature('maintenance_features')}
+                                        className="btn btn-secondary"
+                                        style={{ marginTop: 'var(--space-2)' }}
+                                    >
+                                        + Adicionar item
+                                    </button>
                                 </div>
                             </>
                         )}

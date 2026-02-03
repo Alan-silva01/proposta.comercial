@@ -46,12 +46,21 @@ function RevealSection({ children, className = '', isActive = false }) {
 function AnimatedCounter({ value, duration = 1500, prefix = '', isActive }) {
     const [displayValue, setDisplayValue] = useState(0);
     const [hasAnimated, setHasAnimated] = useState(false);
+    const [lastValue, setLastValue] = useState(0);
     const animationRef = useRef(null);
+
+    // Reset hasAnimated when value changes
+    useEffect(() => {
+        if (value !== lastValue) {
+            setLastValue(value);
+            setHasAnimated(false);
+        }
+    }, [value, lastValue]);
 
     useEffect(() => {
         if (isActive && value > 0 && !hasAnimated) {
             setHasAnimated(true);
-            startAnimation(0, value);
+            startAnimation(displayValue, value);
         }
     }, [isActive, value, hasAnimated]);
 
@@ -686,9 +695,9 @@ export default function ProposalPage() {
                                     <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>pagamento único</div>
                                     <div className={styles.pricingIncluded}>
                                         <ul>
-                                            <li>Configuração Total</li>
-                                            <li>Treinamento da IA</li>
-                                            <li>Garantia de 30 dias</li>
+                                            {(proposal.implementation_features || ['Configuração Total', 'Treinamento da IA', 'Garantia de 30 dias']).map((item, i) => (
+                                                <li key={i}>{item}</li>
+                                            ))}
                                         </ul>
                                     </div>
                                 </div>
@@ -699,9 +708,9 @@ export default function ProposalPage() {
                                         <div className={styles.pricingLabel} style={{ marginBottom: '20px' }}>por mês</div>
                                         <div className={styles.pricingIncluded}>
                                             <ul>
-                                                <li>Manutenção contínua</li>
-                                                <li>Ajustes ilimitados</li>
-                                                <li>Relatórios mensais</li>
+                                                {(proposal.maintenance_features || ['Manutenção contínua', 'Ajustes ilimitados', 'Relatórios mensais']).map((item, i) => (
+                                                    <li key={i}>{item}</li>
+                                                ))}
                                             </ul>
                                         </div>
                                     </div>
