@@ -344,7 +344,7 @@ export default function ProposalPage() {
     const [roi, setRoi] = useState(null);
     const [currentSlide, setCurrentSlide] = useState(0);
 
-    const slidesCount = 9; // Hero, Solution, Diagnosis, Funnel, Impacto, Potencial, Roadmap, Pricing, CTA
+    const slidesCount = 9; // Hero, Diagnosis, Solution, Funnel, Impacto, Potencial, Roadmap, Pricing, CTA
 
     useEffect(() => {
         fetchProposal();
@@ -445,40 +445,10 @@ export default function ProposalPage() {
                     </div>
                 </div>
 
-                {/* SLIDE 2: SOLUTION */}
-                <div className={`${slideStyles.slide} ${currentSlide === 1 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                {/* SLIDE 2: DIAGNOSIS / CHALLENGES */}
+                <div className={`${slideStyles.slide} ${currentSlide === 1 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
                     <div className={slideStyles.slideContent}>
                         <RevealSection isActive={currentSlide === 1}>
-                            <div className={styles.sectionHeader}>
-                                <span className={styles.sectionTag} style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)' }}>Solução Personalizada</span>
-                                <h2 style={{ fontSize: '4.5rem', fontWeight: 900 }}>A Solução</h2>
-                            </div>
-                            <div className={styles.benefitsGrid}>
-                                {(proposal.benefits && proposal.benefits.length > 0) ? (
-                                    proposal.benefits.map(benefitId => {
-                                        const mapped = BENEFITS_MAP[benefitId];
-                                        return (
-                                            <div key={benefitId} className={styles.benefitCard}>
-                                                <h4 className={styles.benefitTitle}>{mapped ? mapped.label : benefitId}</h4>
-                                                {mapped && <p className={styles.benefitDesc}>{mapped.desc}</p>}
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className={styles.benefitCard} style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
-                                        <h4 className={styles.benefitTitle}>Configuração em andamento</h4>
-                                        <p className={styles.benefitDesc}>Definindo os melhores benefícios para sua operação.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </RevealSection>
-                    </div>
-                </div>
-
-                {/* SLIDE 3: DIAGNOSIS / CHALLENGES */}
-                <div className={`${slideStyles.slide} ${currentSlide === 2 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark-2)' }}>
-                    <div className={slideStyles.slideContent}>
-                        <RevealSection isActive={currentSlide === 2}>
                             <div className={styles.sectionHeader}>
                                 <span className={styles.sectionTag}>Diagnóstico</span>
                                 <h2>O cenário atual</h2>
@@ -501,6 +471,36 @@ export default function ProposalPage() {
                                     <span className={styles.statLabel}>Leads Gerados/Mês</span>
                                     <span className={styles.statPercent} style={{ color: 'var(--brand-neon)', fontWeight: 'bold' }}>Base para análise</span>
                                 </div>
+                            </div>
+                        </RevealSection>
+                    </div>
+                </div>
+
+                {/* SLIDE 3: SOLUTION */}
+                <div className={`${slideStyles.slide} ${currentSlide === 2 ? slideStyles.activeSlide : ''}`} style={{ background: 'var(--brand-dark)' }}>
+                    <div className={slideStyles.slideContent}>
+                        <RevealSection isActive={currentSlide === 2}>
+                            <div className={styles.sectionHeader}>
+                                <span className={styles.sectionTag} style={{ fontSize: '1.2rem', marginBottom: 'var(--space-6)' }}>Solução Personalizada</span>
+                                <h2 style={{ fontSize: '4.5rem', fontWeight: 900 }}>A Solução</h2>
+                            </div>
+                            <div className={styles.benefitsGrid}>
+                                {(proposal.benefits && proposal.benefits.length > 0) ? (
+                                    proposal.benefits.map(benefitId => {
+                                        const mapped = BENEFITS_MAP[benefitId];
+                                        return (
+                                            <div key={benefitId} className={styles.benefitCard}>
+                                                <h4 className={styles.benefitTitle}>{mapped ? mapped.label : benefitId}</h4>
+                                                {mapped && <p className={styles.benefitDesc}>{mapped.desc}</p>}
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className={styles.benefitCard} style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                                        <h4 className={styles.benefitTitle}>Configuração em andamento</h4>
+                                        <p className={styles.benefitDesc}>Definindo os melhores benefícios para sua operação.</p>
+                                    </div>
+                                )}
                             </div>
                         </RevealSection>
                     </div>
