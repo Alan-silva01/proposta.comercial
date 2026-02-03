@@ -860,14 +860,14 @@ export default function ProposalPage() {
                                         <p style={{ fontSize: '1.5rem', color: 'var(--brand-muted)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>
                                             Esta proposta está alinhada com os objetivos da <strong style={{ color: 'white' }}>{proposal.company_name}</strong>?
                                         </p>
-                                        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
                                             <a
                                                 href={`https://wa.me/?text=Olá! Acabei de ver a proposta para a ${proposal.company_name} e gostaria de prosseguir.`}
                                                 className={styles.ctaButton}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                Falar com Consultor
+                                                Aceitar Proposta
                                             </a>
                                         </div>
                                         <div style={{ marginTop: '5rem', color: 'var(--brand-muted)', fontSize: '0.9rem' }}>
